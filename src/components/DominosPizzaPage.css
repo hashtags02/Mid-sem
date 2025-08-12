@@ -1,0 +1,359 @@
+/* === Base Reset === */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* === Background === */
+.restaurant-detail-bg {
+  background: #000;
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  padding: 0 0 40px 0;
+}
+
+/* === Header Section === */
+.restaurant-header {
+  background: linear-gradient(180deg, #ff9100 0%, #ff6d00 100%);
+  padding: 36px 0 28px 0;
+  border-bottom-left-radius: 32px;
+  border-bottom-right-radius: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  width: 100vw;
+  min-width: 100vw;
+}
+
+.cravecart-header-row, 
+.restaurant-header > * {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 32px;
+}
+
+.cravecart-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 18px;
+}
+
+.cravecart-title {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.cravecart-search {
+  width: 320px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  background: #fff;
+  color: #ff9100;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  outline: none;
+}
+
+/* === Icons === */
+.cravecart-icons {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.cravecart-user-icon {
+  color: #ff9100;
+  font-size: 2.2rem;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+}
+
+.cravecart-cart-icon {
+  color: #fffbe6;
+  font-size: 2.2rem;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+}
+
+/* === Restaurant Info Section === */
+.restaurant-header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 32px 0 32px;
+}
+
+.restaurant-photo {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  background: #fff;
+}
+
+.restaurant-header-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.restaurant-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.restaurant-cuisines,
+.restaurant-address {
+  color: #fff;
+  opacity: 0.92;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.restaurant-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.restaurant-timings,
+.restaurant-contact {
+  background: #181818;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.restaurant-timings {
+  color: #ff9100;
+}
+
+.restaurant-contact {
+  color: #fff;
+}
+
+.restaurant-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-badge {
+  background: #388e3c;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.rating-count {
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+/* === Menu Section === */
+.restaurant-menu-section {
+  margin: 40px auto 0 auto;
+  max-width: 1100px;
+  width: 90vw;
+  background: #181818;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  padding: 32px 40px;
+}
+
+.menu-title {
+  margin-bottom: 24px;
+  font-size: 2.6rem;
+  font-weight: bold;
+  color: #ff9100;
+  text-align: center;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* === Menu Items === */
+.menu-item {
+  background: #222;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 150px;
+}
+
+.menu-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.menu-item-photo {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #fff;
+  flex-shrink: 0;
+  align-self: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+.menu-item-name {
+  flex: 1;
+}
+
+.menu-item-price {
+  color: #ff9100;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.menu-item-desc {
+  color: #fff;
+  opacity: 0.8;
+  font-size: 0.98rem;
+  margin-top: 0;
+}
+
+.add-to-cart-btn {
+  margin-top: 14px;
+  background: linear-gradient(90deg, #ff9100 0%, #ff6d00 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  align-self: flex-start;
+}
+
+.add-to-cart-btn:hover {
+  background: linear-gradient(90deg, #ff6d00 0%, #ff9100 100%);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+
+/* === Menu Categories === */
+.menu-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.menu-category-btn {
+  background: #181818;
+  color: #ff9100;
+  border: none;
+  border-radius: 18px 18px 0 0;
+  padding: 10px 28px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+.menu-category-btn.active,
+.menu-category-btn:hover {
+  background: #ff9100;
+  color: #fff;
+}
+
+/* === Menu Layouts === */
+.menu-flex-layout {
+  padding: 32px 0;
+}
+
+.menu-flex-row {
+  display: flex;
+  gap: 36px;
+  align-items: flex-start;
+}
+
+.menu-categories-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.menu-list-vertical {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* === Background Image & Overlays === */
+.restaurant-header-bgimg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.restaurant-header-bgimg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 0;
+}
+
+.restaurant-header-content-bg,
+.cravecart-header-row,
+.restaurant-header-info {
+  position: relative;
+  z-index: 1;
+}
+
+/* === Special Effects === */
+.dal-makhani-zoom {
+  transform: scale(1.18);
+  z-index: 1;
+}
+
+/* === Media Queries === */
+@media (max-width: 1200px) {
+  .restaurant-menu-section {
+    max-width: 98vw;
+    padding: 24px 8px;
+  }
+}

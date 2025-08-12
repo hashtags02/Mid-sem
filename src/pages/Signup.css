@@ -1,0 +1,114 @@
+.signup-wrapper {
+  background-color: #000000;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.signup-container {
+  width: 90%;
+  max-width: 1100px;
+  background-color: #000;
+  border-radius: 15px;
+  box-shadow: 0 0 60px 10px rgba(255, 124, 0, 0.35); /* Increased stroke */
+  display: flex;
+  overflow: hidden;
+}
+
+.signup-left {
+  flex: 1;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+.signup-burger {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+.signup-right {
+  flex: 1;
+  background-color: #000000;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.signup-right h1 {
+  color: #ff7c00;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #ccc;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.signup-form input {
+  width: 100%;
+  max-width: 350px;
+  padding: 14px;
+  margin-bottom: 15px;
+  background-color: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  text-align: center;
+}
+
+/* DOB Input specifically */
+.signup-form input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  color-scheme: dark;
+  background-color: #1f1f1f;
+  color: white;
+  text-transform: uppercase; /* Make DOB text uppercase */
+}
+
+.signup-btn {
+  background-color: #ff7c00;
+  color: white;
+  font-weight: bold;
+  padding: 14px;
+  width: 100%;
+  max-width: 350px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 16px;
+}
+
+.signup-btn:hover {
+  background-color: #e86e00;
+}
+
+.login-link {
+  color: #aaa;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.login-link span {
+  color: #ff7c00;
+  cursor: pointer;
+}

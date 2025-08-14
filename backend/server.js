@@ -1,156 +1,79 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const mongoose = require('mongoose');
-const User = require('./model/User');
-
-// Firebase Admin SDK
-const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
-
-// Initialize Firebase Admin
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
 
 const app = express();
 
-// =======================
-// 🔐 Middleware
-// =======================
+// Import routes
+const restaurantRoutes = require('./routes/restaurants');
+const dishRoutes = require('./routes/dishes');
+const userRoutes = require('./routes/users');
+const orderRoutes = require('./routes/orders');
+const authRoutes = require('./routes/auth');
+
+// Middleware
+app.use(helmet());
+app.use(compression());
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
-app.use(bodyParser.json());
-app.use(session({
-  secret: 'mysecret',
-  resave: false,
-  saveUninitialized: false
-}));
-app.use(passport.initialize());
-app.use(passport.session());
 
-// =======================
-// 🌍 MongoDB Connection
-// =======================
-mongoose.connect(process.env.MONGO_URI, {
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Database connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/cravecart', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB error:', err));
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
-// =======================
-// 🔑 Passport: Google OAuth
-// =======================
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'http://localhost:5000/auth/google/callback'
-}, (accessToken, refreshToken, profile, done) => {
-  return done(null, profile);
-}));
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
+// Routes
+app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/dishes', dishRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
 
-// =======================
-// 🔸 Firebase Auth Verification
-// =======================
-app.post('/verify-firebase-token', async (req, res) => {
-  const { idToken, phone } = req.body;
-
-  if (!idToken || !phone) {
-    return res.status(400).json({ success: false, message: 'ID token and phone are required' });
-  }
-
-  try {
-    // Verify the Firebase ID token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const uid = decodedToken.uid;
-    
-    console.log(`🔐 Firebase token verified for UID: ${uid}`);
-
-    let user = await User.findOne({ phone });
-    
-    if (!user) {
-      user = new User({ 
-        phone, 
-        verified: true,
-        firebaseUid: uid 
-      });
-      await user.save();
-      console.log(`📦 New user created for phone: ${phone}`);
-    } else {
-      user.verified = true;
-      user.firebaseUid = uid;
-      await user.save();
-      console.log(`👤 Existing user updated: ${phone}`);
-    }
-
-    req.session.user = {
-      method: 'firebase',
-      uid: uid,
-      phone: phone
-    };
-
-    console.log("✅ Firebase user verified:", phone);
-    res.status(200).json({ success: true, redirect: '/dashboard' });
-  } catch (error) {
-    console.error("❌ Firebase verification failed:", error);
-    res.status(401).json({ success: false, message: 'Invalid Firebase token', error: error.message });
-  }
-});
-
-// =======================
-// 🔸 Google OAuth Routes
-// =======================
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
-  (req, res) => {
-    console.log('✅ Google login successful:', req.user);
-    res.redirect('http://localhost:3000/dashboard');
-  }
-);
-
-// =======================
-// 🔸 User Info + Logout
-// =======================
-app.get('/user', async (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.json({ user: req.user });
-  }
-
-  if (req.session.user?.method === 'firebase') {
-    const user = await User.findOne({ phone: req.session.user.phone });
-    if (user) return res.json({ user: { phone: user.phone, method: 'firebase', uid: req.session.user.uid } });
-  }
-
-  res.status(401).json({ error: 'Not logged in' });
-});
-
-app.get('/logout', (req, res) => {
-  req.logout(() => {
-    req.session.destroy();
-    res.redirect('http://localhost:3000/login');
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'CraveCart Backend is running!',
+    timestamp: new Date().toISOString()
   });
 });
 
-// =======================
-// 🟢 Default Route
-// =======================
-app.get('/', (req, res) => {
-  res.send('Backend running!');
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
 });
 
-const PORT = 5000;
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 CraveCart Backend running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
 });

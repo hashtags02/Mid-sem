@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import GlobalSearch from './GlobalSearch';
+import RestaurantSearch from './RestaurantSearch';
 import './DominosPizzaPage.css';
 
 const restaurant = {
@@ -41,7 +42,10 @@ export default function DominosPizzaPage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <GlobalSearch placeholder="Search for your cravings..." />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <GlobalSearch placeholder="Search all restaurants..." />
+            <RestaurantSearch menu={restaurant.menu} placeholder="Search in Dominos..." />
+          </div>
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

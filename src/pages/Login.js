@@ -3,151 +3,228 @@ import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import burger from './burger.png';
 import googleLogo from './google-logo.png';
-import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const [phone, setPhone] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login, register } = useAuth();
 
-  // Initialize reCAPTCHA
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal',
-        'callback': (response) => {
-          console.log('reCAPTCHA solved');
-        }
-      });
-    }
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError(''); // Clear error when user starts typing
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    
-    if (!phone || phone.length < 10) {
-      alert('Please enter a valid phone number');
-      return;
+  const validateForm = () => {
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required');
+      return false;
     }
 
-    setLoading(true);
+    if (!isLogin) {
+      // Registration validation
+      if (!formData.name || !formData.phone) {
+        setError('Name and phone number are required');
+        return false;
+      }
+      
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return false;
+      }
+      
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        return false;
+      }
+      
+      if (!/^[0-9]{10}$/.test(formData.phone)) {
+        setError('Please enter a valid 10-digit phone number');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setError('');
+
     try {
-      setupRecaptcha();
+      let result;
       
-      // Format phone number with country code
-      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-      
-      const confirmationResult = await signInWithPhoneNumber(
-        auth, 
-        formattedPhone, 
-        window.recaptchaVerifier
-      );
-      
-      // Store the confirmation result for OTP verification
-      window.confirmationResult = confirmationResult;
-      
-      // Navigate to OTP page
-      navigate('/otp', { state: { phone: formattedPhone } });
-      
+      if (isLogin) {
+        // Login
+        result = await login({
+          email: formData.email,
+          password: formData.password
+        });
+      } else {
+        // Register
+        result = await register({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        });
+      }
+
+      if (result.success) {
+        alert(`✅ Successfully ${isLogin ? 'logged in' : 'registered'}!`);
+        navigate('/dashboard');
+      } else {
+        setError(result.error);
+      }
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      alert('Failed to send OTP. Please try again.');
+      console.error('Auth error:', error);
+      setError(error.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    
-    try {
-      const provider = new GoogleAuthProvider();
-      
-      // Add custom parameters for better user experience
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user) {
-        // Successfully signed in with Google
-        alert('✅ Successfully signed in with Google!');
-        
-        // Store user info in localStorage
-        const userData = {
-          uid: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName,
-          photoURL: result.user.photoURL,
-          method: 'google'
-        };
-        
-        localStorage.setItem('user', JSON.stringify(userData));
-        console.log('Google Login - User data stored in localStorage:', userData);
-        
-        // Navigate to dashboard
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      
-      // Handle specific error cases
-      if (error.code === 'auth/popup-closed-by-user') {
-        alert('Sign-in was cancelled. Please try again.');
-      } else if (error.code === 'auth/popup-blocked') {
-        alert('Pop-up was blocked. Please allow pop-ups for this site and try again.');
-      } else {
-        alert('Failed to sign in with Google. Please try again.');
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  const goToSignup = () => {
-    navigate('/signup');
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: ''
+    });
+    setError('');
   };
 
   return (
     <div className="login-container">
-      <div className="login-box">
-        <div className="left-side">
-          <img src={burger} alt="Burger" className="burger-img" />
+      <div className="login-content">
+        <div className="login-header">
+          <img src={burger} alt="Burger" className="burger-icon" />
+          <h1>CraveCart</h1>
         </div>
-        <div className="right-side">
-          <h1 className="title">CRAVECART</h1>
-          <form onSubmit={handleLogin}>
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              required
-              className="input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+
+        <div className="login-form-container">
+          <h2>{isLogin ? 'Welcome Back!' : 'Create Account'}</h2>
+          <p className="login-subtitle">
+            {isLogin ? 'Sign in to continue to CraveCart' : 'Join CraveCart to start ordering'}
+          </p>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {!isLogin && (
+              <div className="form-group">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="form-group">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            {!isLogin && (
+              <div className="form-group">
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number (10 digits)"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  maxLength="10"
+                  required
+                />
+              </div>
+            )}
+
+            <div className="form-group">
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            {!isLogin && (
+              <div className="form-group">
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="login-button"
               disabled={loading}
-            />
-            <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? 'Sending OTP...' : 'Send OTP'}
+            >
+              {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
             </button>
           </form>
-          
-          {/* reCAPTCHA container */}
-          <div id="recaptcha-container"></div>
-          
-          <div className="or">or</div>
-          <button 
-            className="google-btn" 
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-          >
-            <img src={googleLogo} alt="Google" className="google-icon" />
-            {googleLoading ? 'Signing in...' : 'Continue with Google'}
+
+          <div className="login-divider">
+            <span>or</span>
+          </div>
+
+          <button className="google-login-button" disabled>
+            <img src={googleLogo} alt="Google" />
+            Continue with Google (Coming Soon)
           </button>
-          <p className="new-user" onClick={goToSignup}>New User?</p>
+
+          <div className="login-footer">
+            <p>
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button 
+                type="button" 
+                className="toggle-mode-button"
+                onClick={toggleMode}
+              >
+                {isLogin ? 'Sign Up' : 'Sign In'}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

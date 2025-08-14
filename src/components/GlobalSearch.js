@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./AllDishes.css";
+import "./GlobalSearch.css";
 
-// Mapping of dishes to restaurants
+// Mapping of dishes to restaurants where they're available
 const dishToRestaurants = {
   "Red Sauce Pasta": [
     { name: "Le Prive", route: "/le-prive", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753335211/food1_z8vt3v.jpg" },
@@ -46,8 +46,8 @@ const dishToRestaurants = {
   ]
 };
 
-// Dish list
-const dishesData = [
+// All dishes data for search
+const allDishesData = [
   { name: "Red Sauce Pasta", price: 300, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252984/0892e095adc768a6f3daa568d10b74c5_kytasc.jpg", isVeg: true },
   { name: "Grilled Burger", price: 250, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252983/859adef90e854238d9b330d0c7d2cf73_get6ol.jpg", isVeg: false },
   { name: "Paneer Pizza", price: 350, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752563696/410b32a87e020b0e8dbe8a2850d8ca29_socitw.jpg", isVeg: true },
@@ -57,156 +57,100 @@ const dishesData = [
   { name: "Veggie Salad", price: 200, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752398575/15de2cac5615a54813f8e0a8530c6876_whxeeu.jpg", isVeg: true },
   { name: "Paneer Tikka", price: 320, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752398998/7525c28b815e93b8f4ad4a3bb889090e_aunwup.jpg", isVeg: true },
   { name: "Dosa", price: 420, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252984/781c6867d971c5fa7a704c992dc755c3_waxhi9.jpg", isVeg: false },
-  { name: "Rasmalai", price: 80, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252982/10e3906d61a1e09dcb471723d5b28347_ckpxxi.jpg", isVeg: true }
+  { name: "Rasmalai", price: 80, image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252982/10e3906d61a1e09dcb471723d5b28347_ckpxxi.jpg", isVeg: true },
 ];
 
-const AllDishes = ({ searchQuery = "" }) => {
-  const [showVegOnly, setShowVegOnly] = useState(false);
-  const [dishes, setDishes] = useState([]);
-  const [selectedDish, setSelectedDish] = useState(null);
-  const [showRestaurantModal, setShowRestaurantModal] = useState(false);
-
+const GlobalSearch = ({ placeholder = "Search for your cravings..." }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let filtered = dishesData;
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((dish) =>
-        dish.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (showVegOnly) {
-      filtered = filtered.filter((d) => d.isVeg);
-    }
-    setDishes(filtered.slice(0, 10));
-  }, [showVegOnly, searchQuery]);
-
-  const loadMoreDishes = useCallback(() => {
-    let filtered = dishesData;
-    if (searchQuery.trim()) {
-      filtered = filtered.filter((dish) =>
-        dish.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (showVegOnly) {
-      filtered = filtered.filter((d) => d.isVeg);
-    }
-    const currentLength = dishes.length;
-    const more = filtered.slice(currentLength, currentLength + 10);
-    if (more.length > 0) {
-      setDishes((prev) => [...prev, ...more]);
-    }
-  }, [dishes, showVegOnly, searchQuery]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
-        loadMoreDishes();
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreDishes]);
-
-  const toggleVeg = () => {
-    setShowVegOnly((prev) => !prev);
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setShowSearchResults(query.trim().length > 0);
   };
 
-  const handleDishClick = (dish) => {
+  const handleDishSelect = (dish) => {
+    setSearchQuery(dish.name);
+    setShowSearchResults(false);
+    
+    // Check if we have restaurant information for this dish
     const restaurants = dishToRestaurants[dish.name];
+    
     if (restaurants && restaurants.length > 0) {
-      setSelectedDish(dish);
-      setShowRestaurantModal(true);
+      if (restaurants.length === 1) {
+        // If only one restaurant, navigate directly
+        navigate(restaurants[0].route);
+      } else {
+        // If multiple restaurants, show selection modal
+        // For now, navigate to first one, but you could implement a modal here too
+        navigate(restaurants[0].route);
+      }
     } else {
+      // Fallback to all dishes page if no restaurant mapping
       navigate("/all-dishes");
     }
   };
 
-  const handleRestaurantSelect = (restaurant) => {
-    setShowRestaurantModal(false);
-    navigate(restaurant.route);
+  const handleSearchBlur = () => {
+    setTimeout(() => {
+      setShowSearchResults(false);
+    }, 200);
   };
 
-  const closeModal = () => {
-    setShowRestaurantModal(false);
-    setSelectedDish(null);
-  };
+  const filteredDishes = allDishesData.filter((dish) =>
+    dish.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <section className="all-dishes">
-      <div className="all-dishes-header">
-        <h2>All Dishes</h2>
-        <div className="filters" onClick={toggleVeg}>
-          <span className="filter-label">{showVegOnly ? "Veg: ON" : "Veg: OFF"}</span>
-          <div className={`filter-toggle ${showVegOnly ? "on" : ""}`}></div>
-        </div>
-      </div>
-
-      <div className="dish-grid">
-        {dishes.length > 0 ? (
-          dishes.map((dish, index) => (
-            <div className="dish-card" key={index}>
-              <img
-                src={dish.image}
-                alt={dish.name}
-                onClick={() => handleDishClick(dish)}
-                style={{ cursor: "pointer" }}
-              />
-              <p
-                className="dish-name"
-                onClick={() => handleDishClick(dish)}
-                style={{ cursor: "pointer" }}
-              >
-                {dish.name}
-              </p>
-              <p className="dish-price">₹ {dish.price}</p>
-
-              {/* Visit Restaurant button instead of Add to Cart */}
-              <button
-                className="visit-restaurant-btn"
-                onClick={() => handleDishClick(dish)}
-              >
-                Visit Restaurant
-              </button>
-            </div>
-          ))
-        ) : (
-          <div className="no-results">
-            <p>No dishes found matching "{searchQuery}"</p>
-            <p>Try searching for something else or check your spelling</p>
-          </div>
-        )}
-      </div>
-
-      {showRestaurantModal && selectedDish && (
-        <div className="restaurant-modal-overlay" onClick={closeModal}>
-          <div className="restaurant-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Choose Restaurant for {selectedDish.name}</h3>
-              <button className="close-btn" onClick={closeModal}>
-                ×
-              </button>
-            </div>
-            <div className="restaurant-options">
-              {dishToRestaurants[selectedDish.name].map((restaurant, index) => (
+    <div className="global-search-container">
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={searchQuery}
+        onChange={handleSearchChange}
+        onBlur={handleSearchBlur}
+        onFocus={() => setShowSearchResults(searchQuery.trim().length > 0)}
+        className="global-search-input"
+      />
+      
+      {showSearchResults && (
+        <div className="global-search-results">
+          {filteredDishes.length > 0 ? (
+            filteredDishes.map((dish, index) => {
+              const restaurants = dishToRestaurants[dish.name] || [];
+              return (
                 <div
                   key={index}
-                  className="restaurant-option"
-                  onClick={() => handleRestaurantSelect(restaurant)}
+                  className="global-search-result-item"
+                  onClick={() => handleDishSelect(dish)}
                 >
-                  <img src={restaurant.image} alt={restaurant.name} />
-                  <div className="restaurant-info">
-                    <h4>{restaurant.name}</h4>
-                    <p>Click to order from this restaurant</p>
+                  <img src={dish.image} alt={dish.name} />
+                  <div className="dish-info">
+                    <span className="dish-name">{dish.name}</span>
+                    <span className="dish-price">₹{dish.price}</span>
+                    {restaurants.length > 0 && (
+                      <span className="restaurant-info">
+                        Available at: {restaurants.length === 1 
+                          ? restaurants[0].name 
+                          : `${restaurants.length} restaurants (${restaurants.map(r => r.name).join(', ')})`
+                        }
+                      </span>
+                    )}
                   </div>
                 </div>
-              ))}
+              );
+            })
+          ) : (
+            <div className="no-results">
+              <p>No dishes found matching "{searchQuery}"</p>
             </div>
-          </div>
+          )}
         </div>
       )}
-    </section>
+    </div>
   );
 };
 
-export default AllDishes;
+export default GlobalSearch;

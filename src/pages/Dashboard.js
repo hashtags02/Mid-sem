@@ -1,4 +1,5 @@
 import React from 'react';
+import Navbar from '../components/Navbar';
 
 // Import all the same components as the landing page
 import HeroSection from '../components/HeroSection';
@@ -18,6 +19,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   return (
     <div className="dashboard">
+      <Navbar />
       {/* Main Content - Exact same as landing page */}
       <main className="dashboard-main">
         <HeroSection />

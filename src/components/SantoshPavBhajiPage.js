@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import GlobalSearch from './GlobalSearch';
 import './SantoshPavBhajiPage.css';
+import { CartContext } from '../context/CartContext';
 
 const restaurant = {
   name: 'Santosh Pav Bhaji',
@@ -29,9 +31,10 @@ const categories = Array.from(new Set(restaurant.menu.map(item => item.category)
 export default function SantoshPavBhajiPage() {
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const { addItemToCart } = useContext(CartContext);
 
   const handleAddToCart = (item) => {
-    setCart([...cart, item]);
+    addItemToCart(item);
   };
 
   return (
@@ -42,11 +45,7 @@ export default function SantoshPavBhajiPage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <input
-            type="text"
-            placeholder="Search for your cravings..."
-            className="cravecart-search"
-          />
+          <GlobalSearch placeholder="Search for your cravings..." />
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">🛒</span>
           </span>

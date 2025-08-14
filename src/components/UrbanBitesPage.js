@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import GlobalSearch from './GlobalSearch';
 import './UrbanBitesPage.css';
+import { CartContext } from '../context/CartContext';
 
 const restaurant = {
   name: 'Urban Bites',
@@ -42,11 +44,7 @@ export default function UrbanBitesPage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <input
-            type="text"
-            placeholder="Search for your cravings..."
-            className="cravecart-search"
-          />
+          <GlobalSearch placeholder="Search for your cravings..." />
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

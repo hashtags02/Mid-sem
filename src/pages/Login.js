@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import burger from './burger.png';
 import googleLogo from './google-logo.png';
 import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   // Initialize reCAPTCHA
@@ -59,10 +60,52 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // For now, redirect to backend Google OAuth
-    // You can implement Firebase Google Auth later if needed
-    window.location.href = 'http://localhost:5000/auth/google';
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      
+      // Add custom parameters for better user experience
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      const result = await signInWithPopup(auth, provider);
+      
+      if (result.user) {
+        // Successfully signed in with Google
+        alert('✅ Successfully signed in with Google!');
+        
+        // Store user info in localStorage
+        const userData = {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+          photoURL: result.user.photoURL,
+          method: 'google'
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('Google Login - User data stored in localStorage:', userData);
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/popup-blocked') {
+        alert('Pop-up was blocked. Please allow pop-ups for this site and try again.');
+      } else {
+        alert('Failed to sign in with Google. Please try again.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const goToSignup = () => {
@@ -96,9 +139,13 @@ const Login = () => {
           <div id="recaptcha-container"></div>
           
           <div className="or">or</div>
-          <button className="google-btn" onClick={handleGoogleLogin}>
+          <button 
+            className="google-btn" 
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+          >
             <img src={googleLogo} alt="Google" className="google-icon" />
-            Continue with Google
+            {googleLoading ? 'Signing in...' : 'Continue with Google'}
           </button>
           <p className="new-user" onClick={goToSignup}>New User?</p>
         </div>

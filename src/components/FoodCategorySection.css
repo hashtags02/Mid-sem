@@ -25,7 +25,7 @@
 /* ✅ Header */
 .food-category__header {
   display: flex;
-  margin-top: 20px;;
+  margin-top: 20px;
   align-items: center;
   width: 100%;
   padding: 1rem 2rem;
@@ -35,7 +35,6 @@
   flex: 0 0 auto;
   margin-right: 40px;
   margin-left: -180px;
-  
 }
 
 .logo {
@@ -78,11 +77,11 @@
 
 .profile-icon img {
   width: 40px;
-  height: 5 0px;
-  
+  height: 40px;
   padding-left: 20px;
   object-fit: cover;
   cursor: pointer;
+  border-radius: 50%;
 }
 
 /* ✅ Arrows */
@@ -90,7 +89,7 @@
   position: absolute;
   top: 50%;
   width: 100%;
-  max-width: 1200px; /* Same as container */
+  max-width: 1200px;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -103,16 +102,18 @@
   font-size: 2rem;
   font-weight: bold;
   cursor: pointer;
-  
   color: #fff;
   border-radius: 50%;
   padding: 0.5rem 1rem;
   user-select: none;
-  transition: transform 0.2s ease;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  transition: transform 0.2s ease, background 0.3s ease;
 }
 
 .arrow:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* ✅ Carousel Slider */
@@ -127,39 +128,47 @@
   justify-content: center;
   align-items: center;
   gap: 2rem;
+  transition: transform 0.4s ease;
 }
 
 .category {
   flex: 0 0 auto;
   text-align: center;
   transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
-.category img {
-  border-radius: 50%;
-  object-fit: cover;
-}
-
+/* Side Items (small, faded) */
 .category.side img {
   width: 120px;
   height: 120px;
   opacity: 0.5;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transform: scale(0.85);
 }
 
+/* Main Center Item (large, bright) */
 .category.main img {
   width: 200px;
   height: 200px;
   opacity: 1;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
 }
 
+/* Hover effect for interactivity */
+.category:hover img {
+  transform: scale(1.15);
+}
+
+/* Category Text */
 .category p {
   margin-top: 0.5rem;
   font-weight: bold;
   color: #fff;
 }
 
+/* Tagline */
 .tagline {
   font-size: 2rem;
   font-weight: bold;

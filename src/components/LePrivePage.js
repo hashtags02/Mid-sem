@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GlobalSearch from './GlobalSearch';
 import './LePrivePage.css';
 
 const restaurant = {
@@ -38,11 +39,7 @@ export default function LePrivePage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <input
-            type="text"
-            placeholder="Search for your cravings..."
-            className="cravecart-search"
-          />
+          <GlobalSearch placeholder="Search for your cravings..." />
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">🛒</span>
           </span>

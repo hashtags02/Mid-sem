@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import GlobalSearch from './GlobalSearch';
 import './MomosHutPage.css';
+import { CartContext } from '../context/CartContext';
 
 const restaurant = {
   name: 'Momos Hut',
@@ -31,9 +33,10 @@ const categories = Array.from(new Set(restaurant.menu.map(item => item.category)
 export default function MomosHutPage() {
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const { addItemToCart } = useContext(CartContext);
 
   const handleAddToCart = (item) => {
-    setCart([...cart, item]);
+    addItemToCart(item);
   };
 
   return (
@@ -44,11 +47,7 @@ export default function MomosHutPage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <input
-            type="text"
-            placeholder="Search for your cravings..."
-            className="cravecart-search"
-          />
+          <GlobalSearch placeholder="Search for your cravings..." />
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

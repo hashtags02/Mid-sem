@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Signup.css';
 import { useNavigate } from 'react-router-dom';
 import burger from './burger.png';
+import googleLogo from './google-logo.png';
 
 const Signup = () => {
   const navigate = useNavigate();

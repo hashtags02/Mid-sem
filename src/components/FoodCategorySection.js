@@ -1,21 +1,22 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ import this
+import { useNavigate } from "react-router-dom";
 import "./FoodCategorySection.css";
 import DiscountBonanza from "./DiscountBonanza";
 import AllRestaurants from "./AllRestaurants";
 
 const categories = [
-  { name: "North Indian", image: "/northIndian.png" },
-  { name: "Italian", image: "/italian.png" },
-  { name: "South Indian", image: "/southIndian.png" },
-  { name: "North Indian", image: "/northIndian.png" },
-  { name: "Snack", image: "/snack.png" },
+  { name: "North Indian", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753077119/7525c28b815e93b8f4ad4a3bb889090e_vtd6mi.jpg" },
+  { name: "Italian", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753335211/food1_z8vt3v.jpg" },
+  { name: "Chinese", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753335213/food3_islz2v.jpg" },
+  { name: "Snacks", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753335220/food5_vb4td0.jpg" },
+  { name: "South Indian", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1752252984/781c6867d971c5fa7a704c992dc755c3_waxhi9.jpg" },
+  { name: "Mexican", image: "https://res.cloudinary.com/dlurlrbou/image/upload/v1753335197/burger_yrnmbm.jpg" },
 ];
 
 const FoodCategorySection = () => {
-  const [index, setIndex] = useState(2);
+  const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate(); // ✅ add this
+  const navigate = useNavigate();
 
   const nextSlide = () => {
     setIndex((prev) => (prev + 1) % categories.length);
@@ -25,19 +26,22 @@ const FoodCategorySection = () => {
     setIndex((prev) => (prev - 1 + categories.length) % categories.length);
   };
 
-  const visibleItems = [
-    (index - 2 + categories.length) % categories.length,
-    (index - 1 + categories.length) % categories.length,
-    index,
-    (index + 1) % categories.length,
-    (index + 2) % categories.length,
+  // Arrange categories so that `index` is in the center
+  const categoriesOrder = [
+    categories[(index - 2 + categories.length) % categories.length],
+    categories[(index - 1 + categories.length) % categories.length],
+    categories[index],
+    categories[(index + 1) % categories.length],
+    categories[(index + 2) % categories.length],
   ];
+
+  const centerIndex = 2; // middle of the 5
 
   return (
     <>
       <section className="food-category">
         <div className="container">
-          {/* ✅ Header */}
+          {/* Header */}
           <header className="food-category__header">
             <div className="logo-wrap">
               <h1 className="logo">
@@ -58,7 +62,6 @@ const FoodCategorySection = () => {
 
             <div className="header-icons">
               <span className="menu-icon">&#9776;</span>
-              {/* ✅ New Cart Icon */}
               <span
                 className="cart-icon"
                 onClick={() => navigate("/cart")}
@@ -73,7 +76,7 @@ const FoodCategorySection = () => {
             </div>
           </header>
 
-          {/* ✅ Arrows */}
+          {/* Arrows */}
           <div className="arrow-controls">
             <span className="arrow left" onClick={prevSlide}>
               &lt;
@@ -83,22 +86,22 @@ const FoodCategorySection = () => {
             </span>
           </div>
 
-          {/* ✅ Carousel */}
+          {/* Carousel */}
           <div className="food-category__slider">
             <div className="slider-inner">
-              {visibleItems.map((i) => (
+              {categoriesOrder.map((cat, i) => (
                 <div
                   key={i}
-                  className={`category ${i === index ? "main" : "side"}`}
+                  className={`category ${i === centerIndex ? "main" : "side"}`}
                 >
-                  <img src={categories[i].image} alt={categories[i].name} />
-                  <p>{categories[i].name}</p>
+                  <img src={cat.image} alt={cat.name} />
+                  <p>{cat.name}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ✅ Tagline */}
+          {/* Tagline */}
           <h2 className="tagline">
             Your Favourite <br />
             Cravings, <br />
@@ -107,7 +110,7 @@ const FoodCategorySection = () => {
         </div>
       </section>
 
-      {/* ✅ Pass searchQuery as prop */}
+      {/* Pass searchQuery as prop */}
       <DiscountBonanza />
       <AllRestaurants searchQuery={searchQuery} />
     </>

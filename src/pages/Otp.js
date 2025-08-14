@@ -45,39 +45,22 @@ const Otp = () => {
           alert('✅ OTP verified successfully!');
           
           try {
-            // Get the Firebase ID token
-            const idToken = await result.user.getIdToken();
+            // Store user info directly in localStorage after successful verification
+            const userData = {
+              uid: result.user.uid,
+              phone: result.user.phoneNumber,
+              method: 'firebase'
+            };
             
-            // Send to backend for verification
-            const response = await fetch('http://localhost:5000/verify-firebase-token', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include', // Important for sessions
-              body: JSON.stringify({
-                idToken: idToken,
-                phone: result.user.phoneNumber
-              })
-            });
+            localStorage.setItem('user', JSON.stringify(userData));
+            console.log('OTP - User data stored in localStorage:', userData);
             
-            const data = await response.json();
+            // Navigate to dashboard
+            navigate('/dashboard');
             
-            if (data.success) {
-              // Store user info in localStorage
-              localStorage.setItem('user', JSON.stringify({
-                uid: result.user.uid,
-                phone: result.user.phoneNumber,
-                method: 'firebase'
-              }));
-              
-              navigate('/dashboard');
-            } else {
-              alert('❌ Backend verification failed: ' + data.message);
-            }
           } catch (error) {
-            console.error('Backend verification error:', error);
-            alert('❌ Failed to verify with backend. Please try again.');
+            console.error('Error storing user data:', error);
+            alert('❌ Failed to store user data. Please try again.');
           }
         }
       } else {

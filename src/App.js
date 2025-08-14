@@ -9,6 +9,7 @@ import Otp from "./pages/Otp";
 import Dashboard from "./pages/Dashboard";
 
 // ✅ Components (moved under /components)
+import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
 import FeaturedRestaurants from "./components/FeaturedRestaurants";
 import HowItWorks from "./components/HowItWorks";
@@ -63,7 +64,12 @@ function App() {
         <div className="App">
           <Routes>
             {/* 🏠 Main Landing */}
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={
+              <>
+                <Navbar />
+                <LandingPage />
+              </>
+            } />
 
             {/* 🍽️ Food Sections */}
             <Route path="/categories" element={<FoodCategorySection />} />

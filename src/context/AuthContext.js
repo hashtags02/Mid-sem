@@ -16,6 +16,9 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [otpSent, setOtpSent] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isExistingUser, setIsExistingUser] = useState(false);
 
   // Function to check localStorage for user data
   const checkLocalStorage = () => {
@@ -154,12 +157,118 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Check if phone number is registered
+  const checkPhoneNumber = async (phone) => {
+    try {
+      const response = await authAPI.checkPhoneNumber(phone);
+      setIsExistingUser(response.isRegistered);
+      setPhoneNumber(phone);
+      return { success: true, isRegistered: response.isRegistered };
+    } catch (error) {
+      console.error('Phone number check error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Send OTP for login
+  const sendLoginOTP = async (phone) => {
+    try {
+      await authAPI.sendLoginOTP(phone);
+      setOtpSent(true);
+      setPhoneNumber(phone);
+      return { success: true };
+    } catch (error) {
+      console.error('Send login OTP error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Send OTP for registration
+  const sendRegistrationOTP = async (phone) => {
+    try {
+      await authAPI.sendRegistrationOTP(phone);
+      setOtpSent(true);
+      setPhoneNumber(phone);
+      return { success: true };
+    } catch (error) {
+      console.error('Send registration OTP error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Verify OTP for login
+  const verifyLoginOTP = async (phoneNumber, idToken) => {
+    try {
+      const response = await authAPI.verifyLoginOTP(phoneNumber, idToken);
+      const { token } = response;
+      
+      // Store token
+      localStorage.setItem('jwt_token', token);
+      
+      // Get user data
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Reset OTP state
+      setOtpSent(false);
+      setPhoneNumber('');
+      
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error('Verify login OTP error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Verify OTP for registration
+  const verifyRegistrationOTP = async (phoneNumber, idToken, userData) => {
+    try {
+      const response = await authAPI.verifyRegistrationOTP(phoneNumber, idToken, userData);
+      const { token } = response;
+      
+      // Store token
+      localStorage.setItem('jwt_token', token);
+      
+      // Get user data
+      const user = await authAPI.getCurrentUser();
+      setUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Reset OTP state
+      setOtpSent(false);
+      setPhoneNumber('');
+      setIsExistingUser(false);
+      
+      return { success: true, user };
+    } catch (error) {
+      console.error('Verify registration OTP error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Reset OTP state
+  const resetOTPState = () => {
+    setOtpSent(false);
+    setPhoneNumber('');
+    setIsExistingUser(false);
+  };
+
   const value = {
     user,
     loading,
+    otpSent,
+    phoneNumber,
+    isExistingUser,
     login,
     register,
-    logout
+    logout,
+    checkPhoneNumber,
+    sendLoginOTP,
+    sendRegistrationOTP,
+    verifyLoginOTP,
+    verifyRegistrationOTP,
+    resetOTPState
   };
 
   return (

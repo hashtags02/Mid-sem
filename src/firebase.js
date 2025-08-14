@@ -20,4 +20,7 @@ const analytics = getAnalytics(app);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
+// Enable phone authentication for testing
+auth.settings.appVerificationDisabledForTesting = true; // Set to true for testing
+
 export default app; 

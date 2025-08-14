@@ -8,7 +8,11 @@ const Otp = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // These come from Login.js
   const phone = location.state?.phone;
+  const isNewUser = location.state?.isNewUser;
+  const signupData = location.state?.signupData || {};
 
   const handleChange = (e, index) => {
     const value = e.target.value;
@@ -17,7 +21,6 @@ const Otp = () => {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      // Move focus to next input
       if (value && index < 5) {
         document.getElementById(`otp-${index + 1}`).focus();
       }
@@ -36,36 +39,53 @@ const Otp = () => {
     setLoading(true);
 
     try {
-      // Verify OTP using Firebase
-      if (window.confirmationResult) {
-        const result = await window.confirmationResult.confirm(code);
-        
-        if (result.user) {
-          // Successfully verified
-          alert('✅ OTP verified successfully!');
-          
-          try {
-            // Store user info directly in localStorage after successful verification
-            const userData = {
-              uid: result.user.uid,
-              phone: result.user.phoneNumber,
-              method: 'firebase'
-            };
-            
-            localStorage.setItem('user', JSON.stringify(userData));
-            console.log('OTP - User data stored in localStorage:', userData);
-            
-            // Navigate to dashboard
-            navigate('/dashboard');
-            
-          } catch (error) {
-            console.error('Error storing user data:', error);
-            alert('❌ Failed to store user data. Please try again.');
-          }
-        }
-      } else {
+      if (!window.confirmationResult) {
         alert('❌ OTP session expired. Please try again.');
         navigate('/login');
+        return;
+      }
+
+      const result = await window.confirmationResult.confirm(code);
+
+      if (result.user) {
+        // Firebase verification success
+        const idToken = await result.user.getIdToken();
+
+        let backendResponse;
+        if (isNewUser) {
+          // Create account in backend
+          backendResponse = await fetch('http://localhost:5000/api/auth/signup-phone', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              phone,
+              name: signupData.name,
+              email: signupData.email,
+            }),
+          });
+        } else {
+          // Login existing account in backend
+          backendResponse = await fetch('http://localhost:5000/api/auth/login-phone', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ phone }),
+          });
+        }
+
+        const data = await backendResponse.json();
+        if (!backendResponse.ok) throw new Error(data.message || 'Backend error');
+
+        // Store token & user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('OTP verification error:', error);
@@ -75,13 +95,8 @@ const Otp = () => {
     }
   };
 
-  const handleResend = async () => {
-    try {
-      // Navigate back to login to resend OTP
-      navigate('/login');
-    } catch (error) {
-      alert('❌ Failed to resend OTP. Please try again.');
-    }
+  const handleResend = () => {
+    navigate('/login');
   };
 
   if (!phone) {

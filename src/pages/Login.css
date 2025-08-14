@@ -217,3 +217,20 @@ body {
     font-size: 20px;
   }
 }
+
+.back-home-button {
+  background: none;
+  border: 2px solid #666;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.back-home-button:hover {
+  border-color: #ff6600;
+  color: #ff6600;
+}

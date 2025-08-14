@@ -35,6 +35,36 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Auth API
 export const authAPI = {
+  // Check if phone number is registered
+  checkPhoneNumber: (phoneNumber) => apiRequest('/auth/check-phone', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+  }),
+  
+  // Send OTP for login
+  sendLoginOTP: (phoneNumber) => apiRequest('/auth/send-login-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+  }),
+  
+  // Send OTP for registration
+  sendRegistrationOTP: (phoneNumber) => apiRequest('/auth/send-registration-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+  }),
+  
+  // Verify OTP for login
+  verifyLoginOTP: (phoneNumber, idToken) => apiRequest('/auth/verify-login-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber, idToken }),
+  }),
+  
+  // Verify OTP for registration
+  verifyRegistrationOTP: (phoneNumber, idToken, userData) => apiRequest('/auth/verify-registration-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber, idToken, userData }),
+  }),
+  
   register: (userData) => apiRequest('/auth/register', {
     method: 'POST',
     body: JSON.stringify(userData),

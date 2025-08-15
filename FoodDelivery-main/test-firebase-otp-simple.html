@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase OTP Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+        }
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .otp-inputs input {
+            width: 50px;
+            text-align: center;
+            font-size: 20px;
+        }
+        #recaptcha-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Firebase OTP Test</h1>
+        
+        <div id="phone-section">
+            <div class="form-group">
+                <label for="phone">Phone Number (with country code):</label>
+                <input type="tel" id="phone" placeholder="+919081215550" value="+919876543210">
+                <small style="color: #666; margin-top: 5px; display: block;">
+                    Use +919876543210 to test NEW USER registration<br>
+                    Use +919081215550 to test EXISTING USER login
+                </small>
+            </div>
+            <button onclick="sendOTP()" id="send-btn">Send OTP</button>
+            <div id="phone-status"></div>
+        </div>
+
+        <div id="otp-section" style="display: none;">
+            <h3>Enter OTP</h3>
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" class="otp-input" data-index="0">
+                <input type="text" maxlength="1" class="otp-input" data-index="1">
+                <input type="text" maxlength="1" class="otp-input" data-index="2">
+                <input type="text" maxlength="1" class="otp-input" data-index="3">
+                <input type="text" maxlength="1" class="otp-input" data-index="4">
+                <input type="text" maxlength="1" class="otp-input" data-index="5">
+            </div>
+            <button onclick="verifyOTP()" id="verify-btn">Verify OTP</button>
+            <button onclick="resendOTP()" id="resend-btn">Resend OTP</button>
+            <div id="otp-status"></div>
+        </div>
+
+        <div id="recaptcha-container"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzNcd_MbwBhR-JvZrtFTjbTTLqI4PyKEY",
+            authDomain: "cravecartauth.firebaseapp.com",
+            projectId: "cravecartauth",
+            storageBucket: "cravecartauth.firebasestorage.app",
+            messagingSenderId: "932036084192",
+            appId: "1:932036084192:web:ec8faacc02528f8936ab85",
+            measurementId: "G-SY8DX083PP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Enable phone authentication for testing
+        auth.settings.appVerificationDisabledForTesting = true;
+
+        let recaptchaVerifier;
+        let confirmationResult;
+
+        // Initialize reCAPTCHA
+        function initRecaptcha() {
+            try {
+                recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                    'size': 'invisible',
+                    'callback': () => {
+                        console.log('reCAPTCHA solved');
+                    },
+                    'expired-callback': () => {
+                        console.log('reCAPTCHA expired');
+                    }
+                });
+                return true;
+            } catch (error) {
+                console.error('Error initializing reCAPTCHA:', error);
+                return false;
+            }
+        }
+
+        // Send OTP
+        window.sendOTP = async function() {
+            const phone = document.getElementById('phone').value;
+            const statusDiv = document.getElementById('phone-status');
+            
+            if (!phone) {
+                statusDiv.innerHTML = '<div class="error">Please enter a phone number</div>';
+                return;
+            }
+
+            try {
+                statusDiv.innerHTML = '<div>Initializing...</div>';
+                
+                // Initialize reCAPTCHA if not already done
+                if (!recaptchaVerifier) {
+                    const success = initRecaptcha();
+                    if (!success) {
+                        throw new Error('Failed to initialize reCAPTCHA');
+                    }
+                }
+
+                // Render reCAPTCHA
+                await recaptchaVerifier.render();
+                
+                statusDiv.innerHTML = '<div>Sending OTP...</div>';
+                
+                // Send OTP
+                confirmationResult = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
+                
+                statusDiv.innerHTML = '<div class="success">OTP sent successfully!</div>';
+                
+                // Show OTP section
+                document.getElementById('otp-section').style.display = 'block';
+                document.getElementById('phone-section').style.display = 'none';
+                
+                // Focus first OTP input
+                document.querySelector('.otp-input').focus();
+                
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                statusDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Verify OTP
+        window.verifyOTP = async function() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const statusDiv = document.getElementById('otp-status');
+            
+            if (otp.length !== 6) {
+                statusDiv.innerHTML = '<div class="error">Please enter a 6-digit OTP</div>';
+                return;
+            }
+
+            try {
+                statusDiv.innerHTML = '<div>Verifying OTP...</div>';
+                
+                if (!confirmationResult) {
+                    throw new Error('No OTP confirmation result found');
+                }
+
+                const credential = PhoneAuthProvider.credential(
+                    confirmationResult.verificationId, 
+                    otp
+                );
+
+                const result = await signInWithCredential(auth, credential);
+                
+                // Get ID token
+                const idToken = await result.user.getIdToken();
+                
+                statusDiv.innerHTML = `
+                    <div class="success">
+                        ✅ OTP verified successfully!<br>
+                        User ID: ${result.user.uid}<br>
+                        Phone: ${result.user.phoneNumber}<br>
+                        ID Token: ${idToken.substring(0, 50)}...
+                    </div>
+                `;
+                
+                console.log('Verification successful:', {
+                    user: result.user,
+                    idToken: idToken
+                });
+                
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                statusDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Resend OTP
+        window.resendOTP = async function() {
+            const phone = document.getElementById('phone').value;
+            const statusDiv = document.getElementById('otp-status');
+            
+            try {
+                statusDiv.innerHTML = '<div>Resending OTP...</div>';
+                
+                // Clear previous confirmation result
+                confirmationResult = null;
+                
+                // Send new OTP
+                confirmationResult = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
+                
+                statusDiv.innerHTML = '<div class="success">OTP resent successfully!</div>';
+                
+                // Clear OTP inputs
+                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+                document.querySelector('.otp-input').focus();
+                
+            } catch (error) {
+                console.error('Error resending OTP:', error);
+                statusDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Auto-focus next OTP input
+        document.addEventListener('DOMContentLoaded', function() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    if (e.target.value && index < 5) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

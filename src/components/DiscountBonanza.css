@@ -1,0 +1,90 @@
+*body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: jakarta, sans-serif;
+}
+.discount-bonanza {
+  background: #000;
+  padding: 2rem;
+  color: #fff;
+  position: relative;
+  
+}
+
+.discount-bonanza h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.scroll-wrapper {
+  position: relative;
+}
+
+.scroll-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth; /* extra smooth scroll */
+  gap: 3rem;
+  padding-bottom: 1rem;
+}
+
+.scroll-container::-webkit-scrollbar {
+  height: 0px; /* hide scrollbar completely */
+}
+
+.discount-card {
+  background: #111;
+  border-radius: 10px;
+  padding: 1rem;
+  min-width: 200px;
+  flex: 0 0 auto; /* prevent shrinking */
+  position: relative;
+  text-align: center;
+}
+
+.discount-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.offer-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: orange;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Arrow buttons */
+.scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ff850b;
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.scroll-arrow.left {
+  left: -20px;
+}
+
+.scroll-arrow.right {
+  right: -20px;
+}
+
+.scroll-arrow:hover {
+  background: #fff;
+  color: #ff850b;
+}

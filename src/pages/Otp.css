@@ -1,0 +1,110 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #000;
+}
+
+.otp-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.otp-box {
+  background-color: #000000;
+  display: flex;
+  padding: 60px 50px;
+  border-radius: 20px;
+  width: 900px;
+  max-width: 95%;
+  box-shadow: 0 0 60px 10px rgba(255, 124, 0, 0.35);
+}
+
+.left-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.burger-img {
+  width: 340px;
+  height: auto;
+}
+
+.right-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 60px;
+}
+
+.title {
+  color: #ff7c00;
+  margin-top: -0px;
+  font-size: 28px;
+  font-weight: bolder;
+  
+}
+
+.subtitle {
+  color: #ff7c00;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.otp-inputs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.otp-input {
+  background-color: #1e1e1e;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 8px;
+  width: 50px;
+  height: 50px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.otp-input:focus {
+  outline: none;
+  border: 1px solid #ff7c00;
+}
+
+.resend {
+  align-self: flex-end;
+  color: #ff7c00;
+  font-size: 12px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.login-btn {
+  background-color: #ff7c00;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.login-btn:hover {
+  background-color: #e66f00;
+}
+
+.footer-text {
+  color: #ccc;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 5px;
+}

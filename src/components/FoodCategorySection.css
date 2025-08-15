@@ -1,0 +1,178 @@
+/* ✅ Outer Section */
+.food-category {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(
+    to right,
+    #FDA955 0%,
+    #FF850B 20%,
+    #FF850B 70%,
+    #FDA955 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px; 
+  margin: 0 auto;
+}
+
+/* ✅ Header */
+.food-category__header {
+  display: flex;
+  margin-top: 20px;
+  align-items: center;
+  width: 100%;
+  padding: 1rem 2rem;
+}
+
+.logo-wrap {
+  flex: 0 0 auto;
+  margin-right: 40px;
+  margin-left: -180px;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo span {
+  color: #ffffff;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-container input {
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  border: none;
+  outline: none;
+  width: 554px;
+  min-width: 300px;
+}
+
+.header-icons {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-icon {
+  font-size: 1.8rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.profile-icon img {
+  width: 40px;
+  height: 40px;
+  padding-left: 20px;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* ✅ Arrows */
+.arrow-controls {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  max-width: 1200px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2rem;
+  z-index: 2;
+}
+
+.arrow {
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #fff;
+  border-radius: 50%;
+  padding: 0.5rem 1rem;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.arrow:hover {
+  transform: scale(1.15);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ✅ Carousel Slider */
+.food-category__slider {
+  width: 100%;
+  overflow: hidden;
+  margin: 4rem auto;
+}
+
+.slider-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  transition: transform 0.4s ease;
+}
+
+.category {
+  flex: 0 0 auto;
+  text-align: center;
+  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+/* Side Items (small, faded) */
+.category.side img {
+  width: 120px;
+  height: 120px;
+  opacity: 0.5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transform: scale(0.85);
+}
+
+/* Main Center Item (large, bright) */
+.category.main img {
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+}
+
+/* Hover effect for interactivity */
+.category:hover img {
+  transform: scale(1.15);
+}
+
+/* Category Text */
+.category p {
+  margin-top: 0.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Tagline */
+.tagline {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  line-height: 1.4;
+}

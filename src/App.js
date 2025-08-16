@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext"; // ✅ Add CartProvider import
 
 // ✅ Auth Pages (stay under /pages)
 import Login from "./pages/Login";
@@ -63,46 +64,48 @@ function LandingPage() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            {/* 🏠 Main Landing */}
-            <Route path="/" element={
-              <>
-                <Navbar />
-                <LandingPage />
-              </>
-            } />
+      <CartProvider> {/* ✅ Wrap with CartProvider */}
+        <Router>
+          <div className="App">
+            <Routes>
+              {/* 🏠 Main Landing */}
+              <Route path="/" element={
+                <>
+                  <Navbar />
+                  <LandingPage />
+                </>
+              } />
 
-            {/* 🍽️ Food Sections */}
-            <Route path="/categories" element={<FoodCategorySection />} />
-            <Route path="/all-dishes" element={<AllDishesPage />} />
-            <Route path="/cart" element={<CartPage />} />
+              {/* 🍽️ Food Sections */}
+              <Route path="/categories" element={<FoodCategorySection />} />
+              <Route path="/all-dishes" element={<AllDishesPage />} />
+              <Route path="/cart" element={<CartPage />} />
 
-            {/* 🍴 Restaurant Pages */}
-            <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />
-            <Route path="/dominos-pizza" element={<DominosPizzaPage />} />
-            <Route path="/le-prive" element={<LePrivePage />} />
-            <Route path="/south-cafe" element={<SouthCafePage />} />
-            <Route path="/santosh-pav-bhaji" element={<SantoshPavBhajiPage />} />
-            <Route path="/urban-bites" element={<UrbanBitesPage />} />
-            <Route path="/punjabi-dhaba" element={<PunjabiDhabaPage />} />
-            <Route path="/rajasthani-rasoi" element={<RajasthaniRasoiPage />} />
-            <Route path="/the-chaat-chaska" element={<TheChaatChaskaPage />} />
-            <Route path="/momos-hut" element={<MomosHutPage />} />
+              {/* 🍴 Restaurant Pages */}
+              <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />
+              <Route path="/dominos-pizza" element={<DominosPizzaPage />} />
+              <Route path="/le-prive" element={<LePrivePage />} />
+              <Route path="/south-cafe" element={<SouthCafePage />} />
+              <Route path="/santosh-pav-bhaji" element={<SantoshPavBhajiPage />} />
+              <Route path="/urban-bites" element={<UrbanBitesPage />} />
+              <Route path="/punjabi-dhaba" element={<PunjabiDhabaPage />} />
+              <Route path="/rajasthani-rasoi" element={<RajasthaniRasoiPage />} />
+              <Route path="/the-chaat-chaska" element={<TheChaatChaskaPage />} />
+              <Route path="/momos-hut" element={<MomosHutPage />} />
 
-            {/* 📍 Order Tracking Routes */}
-            <Route path="/track" element={<TrackingPage />} />
-            <Route path="/track/:orderId" element={<TrackingPage />} />
+              {/* 📍 Order Tracking Routes */}
+              <Route path="/track" element={<TrackingPage />} />
+              <Route path="/track/:orderId" element={<TrackingPage />} />
 
-            {/* 🔐 Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/otp" element={<Otp />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Routes>
-        </div>
-      </Router>
+              {/* 🔐 Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/otp" element={<Otp />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Routes>
+          </div>
+        </Router>
+      </CartProvider> {/* ✅ Close CartProvider */}
     </AuthProvider>
   );
 }

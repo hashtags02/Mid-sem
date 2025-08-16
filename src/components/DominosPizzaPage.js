@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import GlobalSearch from './GlobalSearch';
 import RestaurantSearch from './RestaurantSearch';
 import './DominosPizzaPage.css';
+import { CartContext } from '../context/CartContext'; // Added import for CartContext
 
 const restaurant = {
   name: 'Domino\'s Pizza',
@@ -27,12 +28,11 @@ const restaurant = {
 const categories = Array.from(new Set(restaurant.menu.map(item => item.category)));
 
 export default function DominosPizzaPage() {
-  const [cart, setCart] = useState([]);
+  const { addToCart, cartItems } = useContext(CartContext); // ✅ use global cart
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
-  const handleAddToCart = (item) => {
-    setCart([...cart, item]);
-  };
+  // ✅ Count total items by summing quantity
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <div className="restaurant-detail-bg">
@@ -42,10 +42,7 @@ export default function DominosPizzaPage() {
       >
         <div className="cravecart-header-row">
           <span className="cravecart-title">CraveCart</span>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <GlobalSearch placeholder="Search all restaurants..." />
-            <RestaurantSearch menu={restaurant.menu} placeholder="Search in Dominos..." />
-          </div>
+          <GlobalSearch placeholder="Search for your cravings..." />
           <span className="cravecart-icons">
             <span className="cravecart-cart-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -53,6 +50,7 @@ export default function DominosPizzaPage() {
                 <path d="M20 22C20.5523 22 21 21.5523 21 21C21 20.4477 20.5523 20 20 20C19.4477 20 19 20.4477 19 21C19 21.5523 19.4477 22 20 22Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
+              {totalItems > 0 && <span className="cart-count-badge">{totalItems}</span>}
             </span>
           </span>
         </div>
@@ -93,7 +91,7 @@ export default function DominosPizzaPage() {
                   <div className="menu-item-name-desc">
                     <span className="menu-item-name">{item.name}</span>
                     <div className="menu-item-desc">{item.description}</div>
-                    <button className="add-to-cart-btn" onClick={() => handleAddToCart(item)}>
+                    <button className="add-to-cart-btn" onClick={() => addToCart(item)}>
                       Add to Cart
                     </button>
                   </div>

@@ -22,6 +22,7 @@ import AboutUsSection from "./components/AboutUsSection";
 import FoodGalleryRow from "./components/FoodGalleryRow";
 import KeyHighlightsSection from "./components/KeyHighlightsSection";
 import FooterSection from "./components/FooterSection";
+import TestAddToCart from "./components/TestAddToCart";
 
 import FoodCategorySection from "./components/FoodCategorySection";
 import AllDishesPage from "./components/AllDishesPage";
@@ -44,6 +45,7 @@ function LandingPage() {
   return (
     <>
       <HeroSection />
+      <TestAddToCart />
       <FeaturedRestaurants />
       <HowItWorks />
       <FeaturedDishes />

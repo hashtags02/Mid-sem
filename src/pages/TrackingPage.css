@@ -1,0 +1,264 @@
+/* Tracking Page Styles */
+.tracking-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+}
+
+.tracking-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Hero Section */
+.tracking-hero {
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+}
+
+.tracking-hero h1 {
+  font-size: 2.5em;
+  margin: 0 0 15px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tracking-hero p {
+  font-size: 1.2em;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Main Form Card */
+.tracking-form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.tracking-form {
+  margin-bottom: 40px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input.error {
+  border-color: #f44336;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.error-text {
+  color: #f44336;
+  font-size: 0.9em;
+  margin-top: 5px;
+  display: block;
+}
+
+.help-text {
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 5px;
+  display: block;
+}
+
+.track-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.track-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Features Section */
+.tracking-features {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #eee;
+}
+
+.tracking-features h3 {
+  text-align: center;
+  margin: 0 0 30px 0;
+  color: #333;
+  font-size: 1.3em;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.feature-item {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.feature-item h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 1em;
+}
+
+.feature-item p {
+  margin: 0;
+  color: #666;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+/* Vadodara Info Section */
+.vadodara-info {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.vadodara-info h3 {
+  text-align: center;
+  margin: 0 0 25px 0;
+  color: #333;
+  font-size: 1.3em;
+}
+
+.delivery-zones {
+  display: grid;
+  gap: 15px;
+}
+
+.zone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.zone-item strong {
+  color: #333;
+  font-size: 1em;
+}
+
+.zone-item span {
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Sample Order Section */
+.sample-order {
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.sample-order h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.sample-order p {
+  margin: 0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sample-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.sample-btn:hover {
+  background: #1976d2;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tracking-page {
+    padding: 20px 10px;
+  }
+  
+  .tracking-hero h1 {
+    font-size: 2em;
+  }
+  
+  .tracking-form-card {
+    padding: 25px;
+    border-radius: 15px;
+  }
+  
+  .features-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 15px;
+  }
+}

@@ -7,8 +7,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Otp from "./pages/Otp";
 import Dashboard from "./pages/Dashboard";
+import TrackingPage from "./pages/TrackingPage";
 
 // ✅ Components (moved under /components)
+import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
 import FeaturedRestaurants from "./components/FeaturedRestaurants";
 import HowItWorks from "./components/HowItWorks";
@@ -81,6 +83,10 @@ function App() {
             <Route path="/rajasthani-rasoi" element={<RajasthaniRasoiPage />} />
             <Route path="/the-chaat-chaska" element={<TheChaatChaskaPage />} />
             <Route path="/momos-hut" element={<MomosHutPage />} />
+
+            {/* 📍 Order Tracking Routes */}
+            <Route path="/track" element={<TrackingPage />} />
+            <Route path="/track/:orderId" element={<TrackingPage />} />
 
             {/* 🔐 Auth Routes */}
             <Route path="/login" element={<Login />} />

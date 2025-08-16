@@ -60,12 +60,12 @@
   border-radius: 10px;
 }
 
-.restaurant-info {
+.featured-restaurants .restaurant-info {
   width: 100%;
   text-align: left;
-  color: #fff;
+  color: #fff !important;
   margin-top: 10px;
-  background: #000;
+  background: #000 !important;
   padding: 10px;
   border-radius: 8px;
 }

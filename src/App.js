@@ -45,7 +45,7 @@ function LandingPage() {
   return (
     <>
       <HeroSection />
-      <TestAddToCart />
+      
       <FeaturedRestaurants />
       <HowItWorks />
       <FeaturedDishes />

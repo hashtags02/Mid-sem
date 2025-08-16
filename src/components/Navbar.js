@@ -8,10 +8,6 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Debug logging
-  console.log('Navbar - Current user state:', user);
-  console.log('Navbar - localStorage user:', localStorage.getItem('user'));
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -48,17 +44,18 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="navbar-logo">CraveCart</div>
+      <div className="navbar-logo" onClick={() => navigate("/")}>CraveCart</div>
       <ul className="navbar-links">
-        <li>Home</li>
+        <li onClick={() => navigate("/")}>Home</li>
+        <li onClick={() => navigate("/track")}>Track Order</li>
         <li>About us</li>
         <li>Help/Support</li>
       </ul>
-      
+
       {!user ? (
         // Show login button when not logged in
         <button className="navbar-login" onClick={handleLoginClick}>
-          Login (User: {user ? 'Logged In' : 'Not Logged In'})
+          Login
         </button>
       ) : (
         // Show hamburger menu when logged in
@@ -68,25 +65,17 @@ function Navbar() {
             <div className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></div>
             <div className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></div>
           </div>
-          
+
           {isMenuOpen && (
             <div className="dropdown-menu">
               <div className="user-info">
                 <span>Welcome, User!</span>
               </div>
               <ul className="menu-items">
-                <li onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}>
-                  Dashboard
-                </li>
-                <li onClick={() => { navigate("/cart"); setIsMenuOpen(false); }}>
-                  Cart
-                </li>
-                <li onClick={() => { navigate("/"); setIsMenuOpen(false); }}>
-                  Home
-                </li>
-                <li onClick={handleLogout}>
-                  Logout
-                </li>
+                <li onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}>Dashboard</li>
+                <li onClick={() => { navigate("/cart"); setIsMenuOpen(false); }}>Cart</li>
+                <li onClick={() => { navigate("/"); setIsMenuOpen(false); }}>Home</li>
+                <li onClick={handleLogout}>Logout</li>
               </ul>
             </div>
           )}

@@ -13,7 +13,7 @@ const Login = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      if (user.role === 'delivery') {
+      if (user.role === 'delivery' || user.role === 'delivery_partner') {
         navigate('/delivery');
       } else {
         navigate('/dashboard');
@@ -23,7 +23,7 @@ const Login = () => {
 
   const handleAuthSuccess = (userData) => {
     alert('✅ Successfully authenticated!');
-    if (userData && userData.role === 'delivery') {
+    if (userData && (userData.role === 'delivery' || userData.role === 'delivery_partner')) {
       navigate('/delivery');
     } else {
       navigate('/dashboard');

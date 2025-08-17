@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import './DeliveryDashboard.css';
+import { useAuth } from '../context/AuthContext';
+import { usersAPI } from '../services/api';
 
 const initialAvailable = [
 	{
@@ -27,6 +29,7 @@ const initialAvailable = [
 ];
 
 export default function DeliveryDashboard() {
+	const { user } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
 	const [activeOrder, setActiveOrder] = useState(null);
@@ -37,6 +40,19 @@ export default function DeliveryDashboard() {
 		name: 'Your Name',
 		bikeNumber: ''
 	});
+	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState('');
+
+	useEffect(() => {
+		if (user) {
+			setProfile(prev => ({
+				...prev,
+				name: user.name || 'Your Name',
+				avatarUrl: user.avatar || '',
+				bikeNumber: user.bikeNumber || ''
+			}));
+		}
+	}, [user]);
 
 	const dailyEarnings = useMemo(() => {
 		return completedOrders.reduce((sum, o) => sum + (o.payoutAmount || 0), 0);
@@ -61,9 +77,24 @@ export default function DeliveryDashboard() {
 		}
 	};
 
-	const handleProfileSave = (e) => {
+	const handleProfileSave = async (e) => {
 		e.preventDefault();
-		setShowProfile(false);
+		setSaving(true);
+		setSaveError('');
+		try {
+			const payload = {
+				name: profile.name,
+				bikeNumber: profile.bikeNumber,
+				avatar: profile.avatarUrl
+			};
+			const updated = await usersAPI.updateProfile(payload);
+			localStorage.setItem('user', JSON.stringify(updated));
+			setShowProfile(false);
+		} catch (err) {
+			setSaveError(err?.message || 'Failed to save profile');
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	return (
@@ -105,12 +136,14 @@ export default function DeliveryDashboard() {
 									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />
 									<input type="text" placeholder="Full Name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
 									<input type="text" placeholder="Bike Number (e.g., MH12 AB 1234)" value={profile.bikeNumber} onChange={(e) => setProfile({ ...profile, bikeNumber: e.target.value.toUpperCase() })} required />
+									<input type="tel" value={user?.phone || ''} readOnly />
 									<div className="dd-hint">Contact number is your login phone and used for tracking.</div>
+									{saveError && <div className="dd-hint" style={{ color: '#ef4444' }}>{saveError}</div>}
 								</div>
 							</div>
 							<div className="dd-profile-actions">
 								<button type="button" className="dd-btn dd-btn-offline" onClick={() => setShowProfile(false)}>Cancel</button>
-								<button type="submit" className="dd-btn dd-btn-pick">Save</button>
+								<button type="submit" className="dd-btn dd-btn-pick" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
 							</div>
 						</form>
 					</div>

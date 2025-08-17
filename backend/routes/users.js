@@ -24,7 +24,9 @@ router.put('/profile', [
   auth,
   body('name').optional().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
   body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('phone').optional().matches(/^[0-9]{10}$/).withMessage('Valid 10-digit phone number is required')
+  body('phone').optional().matches(/^[0-9]{10}$/).withMessage('Valid 10-digit phone number is required'),
+  body('bikeNumber').optional().isLength({ min: 3, max: 20 }).withMessage('Bike number must be 3-20 characters'),
+  body('avatar').optional().isString(),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -37,13 +39,15 @@ router.put('/profile', [
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Update fields
-    const { name, email, phone, preferences, addresses } = req.body;
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
-    if (preferences) user.preferences = { ...user.preferences, ...preferences };
-    if (addresses) user.addresses = addresses;
+      // Update fields
+  const { name, email, phone, preferences, addresses, bikeNumber, avatar } = req.body;
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (phone) user.phone = phone;
+  if (typeof bikeNumber === 'string') user.bikeNumber = bikeNumber;
+  if (typeof avatar === 'string') user.avatar = avatar;
+  if (preferences) user.preferences = { ...user.preferences, ...preferences };
+  if (addresses) user.addresses = addresses;
 
     await user.save();
     res.json(user);

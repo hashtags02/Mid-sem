@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
   birthdate: {
     type: Date
   },
+  bikeNumber: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Bike number cannot exceed 20 characters']
+  },
   addresses: [{
     type: {
       type: String,

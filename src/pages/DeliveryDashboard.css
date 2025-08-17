@@ -141,6 +141,25 @@
 .dd-earn-label { color: var(--muted); font-weight: 700; letter-spacing: 0.3px; }
 .dd-earn-value { color: var(--text); font-size: 22px; font-weight: 900; }
 
+.dd-left { display: flex; align-items: center; gap: 12px; }
+.dd-hamburger { width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow); }
+.dd-hamburger span { display: block; width: 18px; height: 2px; background: var(--text); margin: 3px 0; border-radius: 2px; }
+.dd-hamburger:hover { filter: brightness(1.1); }
+
+.dd-profile-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: grid; place-items: center; z-index: 50; }
+.dd-profile-card { width: 95%; max-width: 560px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.dd-profile-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+.dd-profile-header h3 { margin: 0; color: var(--text); font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
+.dd-close { background: transparent; color: var(--text); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+
+.dd-profile-form { padding: 16px; }
+.dd-avatar-row { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
+.dd-avatar { width: 96px; height: 96px; border-radius: 14px; background: var(--surface-2); background-size: cover; background-position: center; border: 1px solid var(--border); display: grid; place-items: center; }
+.dd-avatar-fallback { color: var(--text); font-weight: 900; font-size: 28px; opacity: 0.9; }
+.dd-inputs input { width: 100%; margin-bottom: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+.dd-hint { color: var(--muted); font-size: 12px; }
+.dd-profile-actions { margin-top: 8px; display: flex; justify-content: flex-end; gap: 10px; }
+
 @media (max-width: 1024px) {
 	.dd-grid { grid-template-columns: 1fr; }
 }

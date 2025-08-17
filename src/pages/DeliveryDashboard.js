@@ -31,6 +31,12 @@ export default function DeliveryDashboard() {
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
 	const [activeOrder, setActiveOrder] = useState(null);
 	const [completedOrders, setCompletedOrders] = useState([]);
+	const [showProfile, setShowProfile] = useState(false);
+	const [profile, setProfile] = useState({
+		avatarUrl: '',
+		name: 'Your Name',
+		bikeNumber: ''
+	});
 
 	const dailyEarnings = useMemo(() => {
 		return completedOrders.reduce((sum, o) => sum + (o.payoutAmount || 0), 0);
@@ -55,10 +61,22 @@ export default function DeliveryDashboard() {
 		}
 	};
 
+	const handleProfileSave = (e) => {
+		e.preventDefault();
+		setShowProfile(false);
+	};
+
 	return (
 		<div className="dd-container">
 			<header className="dd-header">
-				<h1 className="dd-title">Delivery Dashboard</h1>
+				<div className="dd-left">
+					<button className="dd-hamburger" aria-label="Open Profile" onClick={() => setShowProfile(true)}>
+						<span></span>
+						<span></span>
+						<span></span>
+					</button>
+					<h1 className="dd-title">Delivery Dashboard</h1>
+				</div>
 				<div className="dd-status-toggle">
 					<span className={isOnline ? 'dd-dot dd-online' : 'dd-dot dd-offline'}></span>
 					<span className="dd-status-text">{isOnline ? 'Online' : 'Offline'}</span>
@@ -70,6 +88,34 @@ export default function DeliveryDashboard() {
 					</button>
 				</div>
 			</header>
+
+			{showProfile && (
+				<div className="dd-profile-modal">
+					<div className="dd-profile-card">
+						<div className="dd-profile-header">
+							<h3>Update Profile</h3>
+							<button className="dd-close" onClick={() => setShowProfile(false)}>×</button>
+						</div>
+						<form onSubmit={handleProfileSave} className="dd-profile-form">
+							<div className="dd-avatar-row">
+								<div className="dd-avatar" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
+									{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
+								</div>
+								<div className="dd-inputs">
+									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />
+									<input type="text" placeholder="Full Name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
+									<input type="text" placeholder="Bike Number (e.g., MH12 AB 1234)" value={profile.bikeNumber} onChange={(e) => setProfile({ ...profile, bikeNumber: e.target.value.toUpperCase() })} required />
+									<div className="dd-hint">Contact number is your login phone and used for tracking.</div>
+								</div>
+							</div>
+							<div className="dd-profile-actions">
+								<button type="button" className="dd-btn dd-btn-offline" onClick={() => setShowProfile(false)}>Cancel</button>
+								<button type="submit" className="dd-btn dd-btn-pick">Save</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
 
 			<div className="dd-grid">
 				<section className="dd-section">

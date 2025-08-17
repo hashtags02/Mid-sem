@@ -28,6 +28,8 @@ router.post('/check-phone', async (req, res) => {
     
     res.json({ 
       isRegistered: !!user,
+      role: user ? user.role : null,
+      isDelivery: user ? user.role === 'delivery_partner' : false,
       message: user ? 'Phone number is registered' : 'Phone number is not registered'
     });
   } catch (error) {
@@ -220,7 +222,7 @@ router.post('/verify-registration-otp', async (req, res) => {
       }] : [],
       isPhoneVerified: true,
       isEmailVerified: false,
-      role: 'user',
+      role: userData.role === 'delivery' || userData.role === 'delivery_partner' ? 'delivery_partner' : 'user',
       firebaseUid: decodedToken.uid // Store Firebase UID for future reference
     });
 

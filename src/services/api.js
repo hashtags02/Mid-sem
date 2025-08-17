@@ -147,6 +147,21 @@ export const usersAPI = {
     method: 'PUT',
     body: JSON.stringify(profileData),
   }),
+
+  uploadAvatar: async (file) => {
+    const url = `${API_BASE_URL}/users/upload-avatar`;
+    const token = localStorage.getItem('jwt_token');
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    return data;
+  },
   
   getOrders: () => apiRequest('/users/orders'),
   

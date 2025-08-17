@@ -3,6 +3,49 @@ const router = express.Router();
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
 const { auth } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+	fs.mkdirSync(uploadsDir);
+}
+
+// Multer storage
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => cb(null, uploadsDir),
+	filename: (req, file, cb) => {
+		const ext = path.extname(file.originalname);
+		const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9-_]/g, '');
+		cb(null, `${Date.now()}_${base}${ext}`);
+	}
+});
+
+const upload = multer({
+	storage,
+	limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+	fileFilter: (req, file, cb) => {
+		const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+		if (!allowed.includes(file.mimetype)) return cb(new Error('Only JPG/PNG/WebP images are allowed'));
+		cb(null, true);
+	}
+});
+
+// @route   POST /api/users/upload-avatar
+// @desc    Upload profile avatar and return URL
+// @access  Private
+router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) => {
+	try {
+		if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+		const publicUrl = `/uploads/${req.file.filename}`;
+		res.json({ url: publicUrl });
+	} catch (error) {
+		console.error('Error uploading avatar:', error);
+		res.status(500).json({ error: 'Server error' });
+	}
+});
 
 // @route   GET /api/users/profile
 // @desc    Get user profile

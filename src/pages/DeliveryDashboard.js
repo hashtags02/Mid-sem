@@ -97,6 +97,21 @@ export default function DeliveryDashboard() {
 		}
 	};
 
+	const handleAvatarFile = async (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setSaving(true);
+		setSaveError('');
+		try {
+			const { url } = await usersAPI.uploadAvatar(file);
+			setProfile(prev => ({ ...prev, avatarUrl: url }));
+		} catch (err) {
+			setSaveError(err?.message || 'Failed to upload image');
+		} finally {
+			setSaving(false);
+		}
+	};
+
 	return (
 		<div className="dd-container">
 			<header className="dd-header">
@@ -133,6 +148,7 @@ export default function DeliveryDashboard() {
 									{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
 								</div>
 								<div className="dd-inputs">
+									<input type="file" accept="image/*" onChange={handleAvatarFile} />
 									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />
 									<input type="text" placeholder="Full Name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
 									<input type="text" placeholder="Bike Number (e.g., MH12 AB 1234)" value={profile.bikeNumber} onChange={(e) => setProfile({ ...profile, bikeNumber: e.target.value.toUpperCase() })} required />

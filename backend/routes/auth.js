@@ -209,6 +209,8 @@ router.post('/verify-registration-otp', async (req, res) => {
       name: userData.name,
       email: userData.email,
       phone: formattedPhone,
+      gender: userData.gender || 'prefer_not_to_say',
+      birthdate: userData.birthdate ? new Date(userData.birthdate) : undefined,
       addresses: userData.address ? [{
         type: 'home',
         address: {

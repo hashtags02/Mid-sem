@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'restaurant_owner', 'admin', 'delivery_partner'],
     default: 'user'
   },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other', 'prefer_not_to_say'],
+    default: 'prefer_not_to_say'
+  },
+  birthdate: {
+    type: Date
+  },
   addresses: [{
     type: {
       type: String,

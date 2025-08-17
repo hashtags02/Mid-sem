@@ -13,7 +13,9 @@ const PhoneNumberInput = ({ onSuccess, onBack }) => {
 		name: '',
 		email: '',
 		address: '',
-		role: 'user'
+		role: 'user',
+		gender: 'prefer_not_to_say',
+		birthdate: ''
 	});
 	const recaptchaContainerRef = useRef(null);
 
@@ -245,6 +247,30 @@ const PhoneNumberInput = ({ onSuccess, onBack }) => {
 							<option value="delivery">I am a Delivery Partner</option>
 						</select>
 					</div>
+					
+					{userDetails.role === 'delivery' && (
+						<>
+							<div className="input-group">
+								<select
+									value={userDetails.gender}
+									onChange={(e) => setUserDetails({...userDetails, gender: e.target.value})}
+								>
+									<option value="prefer_not_to_say">Gender (Prefer not to say)</option>
+									<option value="male">Male</option>
+									<option value="female">Female</option>
+									<option value="other">Other</option>
+								</select>
+							</div>
+							<div className="input-group">
+								<input
+									type="date"
+									placeholder="Birthdate"
+									value={userDetails.birthdate}
+									onChange={(e) => setUserDetails({...userDetails, birthdate: e.target.value})}
+								/>
+							</div>
+						</>
+					)}
 					
 					{error && <div className="error-message">{error}</div>}
 					

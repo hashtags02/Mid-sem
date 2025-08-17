@@ -40,7 +40,8 @@ router.post('/upload-avatar', auth, upload.single('avatar'), async (req, res) =>
 	try {
 		if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 		const publicUrl = `/uploads/${req.file.filename}`;
-		res.json({ url: publicUrl });
+		const absoluteUrl = `${req.protocol}://${req.get('host')}${publicUrl}`;
+		res.json({ url: absoluteUrl });
 	} catch (error) {
 		console.error('Error uploading avatar:', error);
 		res.status(500).json({ error: 'Server error' });

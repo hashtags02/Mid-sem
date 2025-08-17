@@ -1,74 +1,172 @@
 import React, { useMemo, useState } from 'react';
 import './DeliveryDashboard.css';
 
-const initialOrders = [
-	{ id: 'ORD-1001', customerName: 'Aman Gupta', address: '221B Baker Street, Delhi', status: 'Pending' },
-	{ id: 'ORD-1002', customerName: 'Neha Sharma', address: 'MG Road, Bengaluru', status: 'Pending' },
-	{ id: 'ORD-1003', customerName: 'Rohit Verma', address: 'Park Street, Kolkata', status: 'Picked Up' },
-	{ id: 'ORD-1004', customerName: 'Priya Singh', address: 'FC Road, Pune', status: 'Pending' },
+const initialAvailable = [
+	{
+		id: 'ORD-1005',
+		restaurantName: 'Spice Garden',
+		pickupAddress: '789 Spice Lane, Mumbai',
+		dropAddress: '12 Park View, Andheri West, Mumbai',
+		customerName: 'Karan Mehta',
+		customerPhone: '+91 98765 11111',
+		paymentType: 'COD',
+		payoutAmount: 45,
+		status: 'Available'
+	},
+	{
+		id: 'ORD-1006',
+		restaurantName: 'Burger House',
+		pickupAddress: '654 Burger Street, Mumbai',
+		dropAddress: '77 Lake Road, Powai, Mumbai',
+		customerName: 'Ritu Jain',
+		customerPhone: '+91 98765 22222',
+		paymentType: 'Paid Online',
+		payoutAmount: 52,
+		status: 'Available'
+	}
 ];
 
 export default function DeliveryDashboard() {
-	const [orders, setOrders] = useState(initialOrders);
-	const [filter, setFilter] = useState('All');
+	const [isOnline, setIsOnline] = useState(true);
+	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
+	const [activeOrder, setActiveOrder] = useState(null);
+	const [completedOrders, setCompletedOrders] = useState([]);
 
-	const filteredOrders = useMemo(() => {
-		if (filter === 'All') return orders;
-		return orders.filter(o => o.status === filter);
-	}, [orders, filter]);
+	const dailyEarnings = useMemo(() => {
+		return completedOrders.reduce((sum, o) => sum + (o.payoutAmount || 0), 0);
+	}, [completedOrders]);
 
-	const updateStatus = (orderId, newStatus) => {
-		setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+	const weeklyEarnings = dailyEarnings; // For demo purposes, same as daily
+
+	const acceptOrder = (orderId) => {
+		if (!isOnline || activeOrder) return;
+		const order = availableOrders.find(o => o.id === orderId);
+		if (!order) return;
+		setActiveOrder({ ...order, status: 'Assigned' });
+		setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+	};
+
+	const updateActiveStatus = (newStatus) => {
+		if (!activeOrder) return;
+		setActiveOrder(prev => ({ ...prev, status: newStatus }));
+		if (newStatus === 'Delivered') {
+			setCompletedOrders(prev => [{ ...activeOrder, status: 'Delivered' }, ...prev]);
+			setActiveOrder(null);
+		}
 	};
 
 	return (
 		<div className="dd-container">
 			<header className="dd-header">
 				<h1 className="dd-title">Delivery Dashboard</h1>
-				<div className="dd-filters">
-					<label className="dd-filter-label">Filter:</label>
-					<select className="dd-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
-						<option>All</option>
-						<option>Pending</option>
-						<option>Picked Up</option>
-						<option>Delivered</option>
-					</select>
+				<div className="dd-status-toggle">
+					<span className={isOnline ? 'dd-dot dd-online' : 'dd-dot dd-offline'}></span>
+					<span className="dd-status-text">{isOnline ? 'Online' : 'Offline'}</span>
+					<button
+						className={`dd-btn ${isOnline ? 'dd-btn-offline' : 'dd-btn-pick'}`}
+						onClick={() => setIsOnline(v => !v)}
+					>
+						{isOnline ? 'Go Offline' : 'Go Online'}
+					</button>
 				</div>
 			</header>
 
-			<div className="dd-card">
-				<div className="dd-table-header">
-					<div>Order ID</div>
-					<div>Customer</div>
-					<div>Address</div>
-					<div>Status</div>
-					<div>Actions</div>
-				</div>
+			<div className="dd-grid">
+				<section className="dd-section">
+					<div className="dd-section-header">
+						<h2>Available Orders</h2>
+						<span className="dd-chip">{availableOrders.length}</span>
+					</div>
+					{availableOrders.length === 0 ? (
+						<div className="dd-empty">No available orders right now.</div>
+					) : (
+						<div className="dd-list">
+							{availableOrders.map(order => (
+								<div key={order.id} className="dd-order-card">
+									<div className="dd-order-top">
+										<div className="dd-order-id">{order.id}</div>
+										<div className={`dd-status ${'dd-status-pending'}`}>{order.paymentType}</div>
+									</div>
+									<div className="dd-order-body">
+										<div className="dd-rowline"><span className="dd-key">Pickup:</span> <span className="dd-val">{order.restaurantName} — {order.pickupAddress}</span></div>
+										<div className="dd-rowline"><span className="dd-key">Drop:</span> <span className="dd-val">{order.dropAddress}</span></div>
+										<div className="dd-rowline"><span className="dd-key">Customer:</span> <span className="dd-val">{order.customerName} ({order.customerPhone})</span></div>
+									</div>
+									<div className="dd-order-actions">
+										<div className="dd-payout">₹{order.payoutAmount}</div>
+										<button
+											className="dd-btn dd-btn-pick"
+											onClick={() => acceptOrder(order.id)}
+											disabled={!isOnline || !!activeOrder}
+										>
+											Accept
+										</button>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+				</section>
 
-				{filteredOrders.map(order => (
-					<div key={order.id} className="dd-row">
-						<div className="dd-col-id">{order.id}</div>
-						<div className="dd-col-customer">{order.customerName}</div>
-						<div className="dd-col-address">{order.address}</div>
-						<div className={`dd-status ${order.status === 'Delivered' ? 'dd-status-delivered' : order.status === 'Picked Up' ? 'dd-status-picked' : 'dd-status-pending'}`}>{order.status}</div>
-						<div className="dd-actions">
-							<button
-								className="dd-btn dd-btn-pick"
-								onClick={() => updateStatus(order.id, 'Picked Up')}
-								disabled={order.status === 'Delivered' || order.status === 'Picked Up'}
-							>
-								Picked Up
-							</button>
-							<button
-								className="dd-btn dd-btn-deliver"
-								onClick={() => updateStatus(order.id, 'Delivered')}
-								disabled={order.status === 'Delivered'}
-							>
-								Delivered
-							</button>
+				<section className="dd-section">
+					<div className="dd-section-header">
+						<h2>Current Active Order</h2>
+					</div>
+					{!activeOrder ? (
+						<div className="dd-empty">No active order. Accept an order to start.</div>
+					) : (
+						<div className="dd-card dd-active">
+							<div className="dd-active-top">
+								<div className="dd-order-id">{activeOrder.id}</div>
+								<div className={`dd-status ${activeOrder.status === 'Delivered' ? 'dd-status-delivered' : activeOrder.status === 'Picked Up' ? 'dd-status-picked' : 'dd-status-pending'}`}>{activeOrder.status}</div>
+							</div>
+							<div className="dd-active-body">
+								<div className="dd-rowline"><span className="dd-key">Pickup:</span> <span className="dd-val">{activeOrder.restaurantName} — {activeOrder.pickupAddress}</span></div>
+								<div className="dd-rowline"><span className="dd-key">Drop:</span> <span className="dd-val">{activeOrder.dropAddress}</span></div>
+								<div className="dd-rowline"><span className="dd-key">Customer:</span> <span className="dd-val">{activeOrder.customerName} ({activeOrder.customerPhone})</span></div>
+								<div className="dd-rowline"><span className="dd-key">Payment:</span> <span className="dd-val">{activeOrder.paymentType}</span></div>
+							</div>
+							<div className="dd-active-actions">
+								<button
+									className="dd-btn dd-btn-pick"
+									onClick={() => updateActiveStatus('Picked Up')}
+									disabled={activeOrder.status !== 'Assigned'}
+								>
+									Picked Up
+								</button>
+								<button
+									className="dd-btn dd-btn-deliver"
+									onClick={() => updateActiveStatus('Delivered')}
+									disabled={activeOrder.status !== 'Picked Up'}
+								>
+									Delivered
+								</button>
+							</div>
+						</div>
+					)}
+				</section>
+
+				<section className="dd-section">
+					<div className="dd-section-header">
+						<h2>Earnings Summary</h2>
+					</div>
+					<div className="dd-card dd-earnings">
+						<div className="dd-earn-grid">
+							<div className="dd-earn-item">
+								<div className="dd-earn-label">Today</div>
+								<div className="dd-earn-value">₹{dailyEarnings}</div>
+							</div>
+							<div className="dd-earn-item">
+								<div className="dd-earn-label">This Week</div>
+								<div className="dd-earn-value">₹{weeklyEarnings}</div>
+							</div>
+							<div className="dd-earn-item">
+								<div className="dd-earn-label">Completed</div>
+								<div className="dd-earn-value">{completedOrders.length}</div>
+							</div>
 						</div>
 					</div>
-				))}
+				</section>
 			</div>
 		</div>
 	);

@@ -1,0 +1,119 @@
+.dd-container {
+	max-width: 1100px;
+	margin: 32px auto;
+	padding: 0 16px;
+	font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.dd-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+}
+
+.dd-title {
+	font-size: 28px;
+	font-weight: 700;
+	margin: 0;
+}
+
+.dd-filters {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.dd-filter-label {
+	font-size: 14px;
+	color: #555;
+}
+
+.dd-select {
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 8px 10px;
+	background: #fff;
+}
+
+.dd-card {
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	background: #fff;
+	overflow: hidden;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.dd-table-header, .dd-row {
+	display: grid;
+	grid-template-columns: 1.1fr 1.2fr 2fr 1fr 1.4fr;
+	gap: 12px;
+	align-items: center;
+	padding: 14px 16px;
+}
+
+.dd-table-header {
+	background: #f8fafc;
+	font-weight: 600;
+	color: #374151;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.dd-row {
+	border-top: 1px solid #f1f5f9;
+}
+
+.dd-col-id {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	color: #111827;
+}
+
+.dd-col-customer { color: #111827; font-weight: 500; }
+.dd-col-address { color: #374151; }
+
+.dd-status {
+	font-size: 12px;
+	padding: 6px 10px;
+	border-radius: 9999px;
+	text-align: center;
+	font-weight: 600;
+	border: 1px solid transparent;
+}
+
+.dd-status-pending { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.dd-status-picked { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.dd-status-delivered { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+.dd-actions { display: flex; gap: 8px; justify-content: flex-start; }
+
+.dd-btn {
+	border: none;
+	border-radius: 8px;
+	padding: 8px 12px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 14px;
+	transition: transform 0.06s ease, opacity 0.2s ease;
+}
+
+.dd-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.dd-btn:active {
+	transform: translateY(1px);
+}
+
+.dd-btn-pick { background: #2563eb; color: #fff; }
+.dd-btn-deliver { background: #10b981; color: #fff; }
+
+@media (max-width: 768px) {
+	.dd-table-header, .dd-row {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+	.dd-table-header div:nth-child(n+2) { display: none; }
+	.dd-row > div { padding: 2px 0; }
+	.dd-actions { justify-content: flex-start; }
+}

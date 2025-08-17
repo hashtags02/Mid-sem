@@ -12,13 +12,21 @@ const Signup = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      if (user.role === 'delivery') {
+        navigate('/delivery');
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
   const handleAuthSuccess = (userData) => {
     alert('✅ Successfully registered!');
-    navigate('/dashboard');
+    if (userData && userData.role === 'delivery') {
+      navigate('/delivery');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleBackToHome = () => {

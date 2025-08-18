@@ -29,7 +29,7 @@ const initialAvailable = [
 ];
 
 export default function DeliveryDashboard() {
-	const { user } = useAuth();
+	const { user, updateUser } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
 	const [activeOrder, setActiveOrder] = useState(null);
@@ -89,6 +89,7 @@ export default function DeliveryDashboard() {
 			};
 			const updated = await usersAPI.updateProfile(payload);
 			localStorage.setItem('user', JSON.stringify(updated));
+			updateUser?.(updated);
 			setShowProfile(false);
 		} catch (err) {
 			setSaveError(err?.message || 'Failed to save profile');

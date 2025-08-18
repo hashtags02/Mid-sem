@@ -160,6 +160,9 @@
 .dd-hint { color: var(--muted); font-size: 12px; }
 .dd-profile-actions { margin-top: 8px; display: flex; justify-content: flex-end; gap: 10px; }
 
+.dd-avatar-mini { width: 40px; height: 40px; border-radius: 9999px; overflow: hidden; padding: 0; border: 2px solid rgba(255,102,0,0.45); background: transparent; display: grid; place-items: center; }
+.dd-avatar-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 @media (max-width: 1024px) {
 	.dd-grid { grid-template-columns: 1fr; }
 }

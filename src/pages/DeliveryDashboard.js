@@ -116,10 +116,16 @@ export default function DeliveryDashboard() {
 		<div className="dd-container">
 			<header className="dd-header">
 				<div className="dd-left">
-					<button className="dd-hamburger" aria-label="Open Profile" onClick={() => setShowProfile(true)}>
-						<span></span>
-						<span></span>
-						<span></span>
+					<button className={profile.avatarUrl ? 'dd-avatar-mini' : 'dd-hamburger'} aria-label="Open Profile" onClick={() => setShowProfile(true)}>
+						{profile.avatarUrl ? (
+							<img src={profile.avatarUrl} alt="Profile" />
+						) : (
+							<>
+								<span></span>
+								<span></span>
+								<span></span>
+							</>
+						)}
 					</button>
 					<h1 className="dd-title">Delivery Dashboard</h1>
 				</div>

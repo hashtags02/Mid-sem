@@ -117,16 +117,10 @@ export default function DeliveryDashboard() {
 		<div className="dd-container">
 			<header className="dd-header">
 				<div className="dd-left">
-					<button className={profile.avatarUrl ? 'dd-avatar-mini' : 'dd-hamburger'} aria-label="Open Profile" onClick={() => setShowProfile(true)}>
-						{profile.avatarUrl ? (
-							<img src={profile.avatarUrl} alt="Profile" />
-						) : (
-							<>
-								<span></span>
-								<span></span>
-								<span></span>
-							</>
-						)}
+					<button className={'dd-hamburger'} aria-label="Open Profile" onClick={() => setShowProfile(true)}>
+						<span></span>
+						<span></span>
+						<span></span>
 					</button>
 					<h1 className="dd-title">Delivery Dashboard</h1>
 				</div>
@@ -149,11 +143,14 @@ export default function DeliveryDashboard() {
 							<h3>Update Profile</h3>
 							<button className="dd-close" onClick={() => setShowProfile(false)}>×</button>
 						</div>
+						<div className="dd-profile-preview">
+							<div className="dd-avatar dd-avatar-large" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
+								{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
+							</div>
+							<div className="dd-profile-name">{profile.name || 'Your Name'}</div>
+						</div>
 						<form onSubmit={handleProfileSave} className="dd-profile-form">
 							<div className="dd-avatar-row">
-								<div className="dd-avatar" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
-									{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
-								</div>
 								<div className="dd-inputs">
 									<input type="file" accept="image/*" onChange={handleAvatarFile} />
 									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />

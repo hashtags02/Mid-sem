@@ -163,6 +163,10 @@
 .dd-avatar-mini { width: 40px; height: 40px; border-radius: 9999px; overflow: hidden; padding: 0; border: 2px solid rgba(255,102,0,0.45); background: transparent; display: grid; place-items: center; }
 .dd-avatar-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+.dd-profile-preview { display: grid; place-items: center; padding: 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+.dd-avatar-large { width: 120px; height: 120px; border-radius: 9999px; }
+.dd-profile-name { margin-top: 10px; color: var(--text); font-weight: 900; font-size: 18px; letter-spacing: 0.3px; }
+
 @media (max-width: 1024px) {
 	.dd-grid { grid-template-columns: 1fr; }
 }

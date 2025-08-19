@@ -71,7 +71,11 @@ const Otp = () => {
                 method: 'firebase'
               }));
               
-              navigate('/dashboard');
+              // Role-based redirect (frontend-only):
+              // For demo, treat numbers ending with 99 as delivery agents
+              const role = result.user.phoneNumber?.endsWith('99') ? 'delivery' : 'customer';
+              localStorage.setItem('role', role);
+              navigate(role === 'delivery' ? '/resturant-dashboard' : '/dashboard');
             } else {
               alert('❌ Backend verification failed: ' + data.message);
             }

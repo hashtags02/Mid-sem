@@ -152,6 +152,33 @@
   color: #888888;
 }
 
+.split-upi-collection {
+  margin-top: 15px;
+}
+
+.split-upi-input-group {
+  margin-bottom: 15px;
+}
+
+.split-upi-input {
+  transition: border-color 0.3s ease;
+}
+
+.split-upi-input:focus {
+  outline: none;
+  border-color: #ff7f00 !important;
+  box-shadow: 0 0 0 2px rgba(255, 127, 0, 0.2);
+}
+
+.split-payment-summary {
+  margin-bottom: 20px;
+}
+
+.split-payment-summary h3 {
+  border-bottom: 1px solid #3c3c3c;
+  padding-bottom: 10px;
+}
+
 .split-payment-option {
   margin-bottom: 25px;
   display: flex;

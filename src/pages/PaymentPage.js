@@ -51,12 +51,8 @@ const PaymentPage = () => {
     }
     
     if (selectedPaymentMethod === 'upi') {
-      if (splitBillEnabled && splitBillType === 'manual') {
-        // For manual split, redirect to split payment page
-        navigate('/split-payment');
-      } else {
-        setShowUPIForm(true);
-      }
+      // For all UPI payments (including split bills), show UPI form first
+      setShowUPIForm(true);
     }
   };
 
@@ -71,8 +67,23 @@ const PaymentPage = () => {
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
-      const amount = splitBillEnabled ? splitAmount : totalAmount;
-      showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${amount}`);
+      
+      if (splitBillEnabled && splitBillType === 'manual') {
+        // For manual split, redirect to split payment page after UPI verification
+        navigate('/split-payment', { 
+          state: { 
+            payerUpiId: upiId,
+            totalAmount: totalAmount 
+          } 
+        });
+      } else {
+        // For regular payments or equal split
+        const amount = splitBillEnabled ? splitAmount : totalAmount;
+        const splitMessage = splitBillEnabled 
+          ? ` (Your share from split bill)` 
+          : '';
+        showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${amount}${splitMessage}`);
+      }
     }, 2000);
   };
 

@@ -30,6 +30,7 @@ import AllDishesPage from "./components/AllDishesPage";
 import CartPage from "./pages/CartPage";
 import PaymentPage from "./pages/PaymentPage";
 import SplitPaymentPage from "./pages/SplitPaymentPage";
+import SplitUpiCollectionPage from "./pages/SplitUpiCollectionPage";
 
 import OldSchoolEateryPage from "./components/OldSchoolEateryPage";
 import DominosPizzaPage from "./components/DominosPizzaPage";
@@ -86,6 +87,7 @@ function App() {
               {/* 💳 Payment Routes */}
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/split-payment" element={<SplitPaymentPage />} />
+              <Route path="/split-upi-collection" element={<SplitUpiCollectionPage />} />
 
               {/* 🍴 Restaurant Pages */}
               <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />

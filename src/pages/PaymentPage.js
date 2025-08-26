@@ -18,10 +18,8 @@ const PaymentPage = () => {
   
   const navigate = useNavigate();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [isSplitPayment, setIsSplitPayment] = useState(false);
   const [showUPIForm, setShowUPIForm] = useState(false);
   const [upiId, setUpiId] = useState('');
-  const [splitUpiIds, setSplitUpiIds] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -33,18 +31,7 @@ const PaymentPage = () => {
     if (cartItems.length === 0) {
       navigate('/');
     }
-    
-    // Initialize UPI IDs for split bill members
-    if (splitBillEnabled && splitBillType === 'manual') {
-      const initialUpiIds = {};
-      manualSplitData.forEach((person, index) => {
-        if (person.name.trim()) {
-          initialUpiIds[index] = '';
-        }
-      });
-      setSplitUpiIds(initialUpiIds);
-    }
-  }, [cartItems, navigate, splitBillEnabled, splitBillType, manualSplitData]);
+  }, [cartItems, navigate]);
 
   const selectPayment = (method) => {
     setSelectedPaymentMethod(method);
@@ -67,71 +54,28 @@ const PaymentPage = () => {
     }
     
     if (selectedPaymentMethod === 'upi') {
-      // Validate UPI IDs for split bills
-      if (splitBillEnabled && splitBillType === 'manual') {
-        const missingUpiIds = manualSplitData.filter((person, index) => 
-          person.name.trim() && (!splitUpiIds[index] || !splitUpiIds[index].trim())
-        );
-        
-        if (missingUpiIds.length > 0) {
-          alert('Please enter UPI IDs for all members in the split bill');
-          return;
-        }
+      if (splitBillEnabled) {
+        // For split payments, redirect to dedicated UPI collection page
+        navigate('/split-upi-collection');
+      } else {
+        // For regular payments, show UPI form
+        setShowUPIForm(true);
       }
-      
-      // For all UPI payments, show UPI form
-      setShowUPIForm(true);
     }
   };
 
   const processUPIPayment = () => {
-    if (splitBillEnabled && splitBillType === 'manual') {
-      // For manual split bills, process all UPI payments directly
-      processAllSplitPayments();
-    } else {
-      // For regular payments or equal split
-      if (!upiId.trim()) {
-        alert('Please enter your UPI ID');
-        return;
-      }
-      
-      setIsProcessing(true);
-      
-      setTimeout(() => {
-        setIsProcessing(false);
-        const amount = splitBillEnabled ? splitAmount : totalAmount;
-        const splitMessage = splitBillEnabled 
-          ? ` (Your share from split bill)` 
-          : '';
-        showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${amount}${splitMessage}`);
-      }, 2000);
+    if (!upiId.trim()) {
+      alert('Please enter your UPI ID');
+      return;
     }
-  };
-
-  const processAllSplitPayments = () => {
+    
     setIsProcessing(true);
     
-    // Simulate processing payments for all members
     setTimeout(() => {
       setIsProcessing(false);
-      
-      const paymentDetails = manualSplitData
-        .map((person, originalIndex) => {
-          if (!person.name.trim()) return null;
-          return `${person.name}: ₹${person.amount} → ${splitUpiIds[originalIndex]}`;
-        })
-        .filter(Boolean)
-        .join('\n');
-        
-      showSuccessMessage(`All split payments processed successfully!\n\n${paymentDetails}`);
-    }, 3000);
-  };
-
-  const handleSplitUpiIdChange = (personIndex, upiId) => {
-    setSplitUpiIds(prev => ({
-      ...prev,
-      [personIndex]: upiId
-    }));
+      showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${totalAmount}`);
+    }, 2000);
   };
 
   const showSuccessMessage = (message) => {
@@ -185,83 +129,29 @@ const PaymentPage = () => {
           
           <div className="upi-payment-form">
             <h2>UPI Payment</h2>
-            
-            {splitBillEnabled && splitBillType === 'manual' ? (
-              // Manual Split Payment Confirmation
-              <>
-                <p style={{ color: '#aaaaaa', marginBottom: '20px' }}>
-                  Processing split payments for all members
-                </p>
-                
-                <div className="split-payment-summary">
-                  <h3 style={{ color: '#ffffff', marginBottom: '15px' }}>Payment Summary:</h3>
-                  {manualSplitData.map((person, index) => {
-                    if (!person.name.trim()) return null;
-                    
-                    return (
-                      <div key={index} style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        padding: '10px',
-                        marginBottom: '10px',
-                        backgroundColor: '#2c2c2c',
-                        borderRadius: '8px'
-                      }}>
-                        <div>
-                          <span style={{ color: '#ffffff', fontWeight: '500' }}>
-                            {person.name}
-                          </span>
-                          <br />
-                          <span style={{ color: '#aaaaaa', fontSize: '0.85rem' }}>
-                            {splitUpiIds[index]}
-                          </span>
-                        </div>
-                        <span style={{ color: '#ff7f00', fontWeight: '600' }}>
-                          ₹{person.amount}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                <div className="amount-display">
-                  <span>Total Amount:</span>
-                  <span className="amount">₹{totalAmount}</span>
-                </div>
-              </>
-            ) : (
-              // Regular or Equal Split Payment
-              <>
-                <div className="input-group">
-                  <label>UPI ID</label>
-                  <input
-                    type="text"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="Enter your UPI ID"
-                  />
-                </div>
-                <div className="amount-display">
-                  <span>Amount to Pay:</span>
-                  <span className="amount">₹{splitBillEnabled ? splitAmount : totalAmount}</span>
-                </div>
-              </>
-            )}
+            <div className="input-group">
+              <label>UPI ID</label>
+              <input
+                type="text"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="Enter your UPI ID"
+              />
+            </div>
+            <div className="amount-display">
+              <span>Amount to Pay:</span>
+              <span className="amount">₹{totalAmount}</span>
+            </div>
             
             {isProcessing ? (
               <div className="loading-content">
                 <div className="spinner"></div>
-                <p>{splitBillEnabled && splitBillType === 'manual' 
-                  ? 'Processing all split payments...' 
-                  : 'Processing payment...'}</p>
+                <p>Processing payment...</p>
               </div>
             ) : (
               <>
                 <button className="primary-btn" onClick={processUPIPayment}>
-                  {splitBillEnabled && splitBillType === 'manual' 
-                    ? 'Process All Payments' 
-                    : 'Pay Now'}
+                  Pay Now
                 </button>
                 <button className="secondary-btn" onClick={() => setShowUPIForm(false)}>
                   Cancel
@@ -312,62 +202,20 @@ const PaymentPage = () => {
         {splitBillEnabled && (
           <div className="split-payment-info">
             <div className="split-info-card">
-              <h3 style={{ color: '#ff7f00', marginBottom: '15px' }}>
+              <h3 style={{ color: '#ff7f00', marginBottom: '10px' }}>
                 🔄 Split Bill Enabled
               </h3>
               {splitBillType === 'equal' ? (
-                <p style={{ color: '#ffffff', margin: '0 0 10px 0' }}>
-                  Split equally - Your share: ₹{splitAmount}
+                <p style={{ color: '#ffffff', margin: '0' }}>
+                  Split equally among {splitBillCount} people - Each pays: ₹{splitAmount}
                 </p>
               ) : (
-                <>
-                  <p style={{ color: '#ffffff', margin: '0 0 15px 0' }}>
-                    Manual split configured for {manualSplitData.filter(p => p.name.trim()).length} people
-                  </p>
-                  
-                  {/* UPI ID Collection for Manual Split */}
-                  <div className="split-upi-collection">
-                    <h4 style={{ color: '#ffffff', marginBottom: '15px' }}>
-                      Enter UPI IDs for all members:
-                    </h4>
-                    {manualSplitData.map((person, index) => {
-                      if (!person.name.trim()) return null;
-                      
-                      return (
-                        <div key={index} className="split-upi-input-group">
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                            <span style={{ color: '#ffffff', fontWeight: '500' }}>
-                              {person.name}
-                            </span>
-                            <span style={{ color: '#ff7f00' }}>
-                              ₹{person.amount}
-                            </span>
-                          </div>
-                          <input
-                            type="text"
-                            value={splitUpiIds[index] || ''}
-                            onChange={(e) => handleSplitUpiIdChange(index, e.target.value)}
-                            placeholder={`Enter ${person.name}'s UPI ID`}
-                            className="split-upi-input"
-                            style={{
-                              width: '100%',
-                              padding: '10px',
-                              marginBottom: '15px',
-                              backgroundColor: '#2c2c2c',
-                              border: '1px solid #3c3c3c',
-                              borderRadius: '6px',
-                              color: '#ffffff',
-                              fontSize: '0.9rem'
-                            }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
+                <p style={{ color: '#ffffff', margin: '0' }}>
+                  Manual split configured for {manualSplitData.filter(p => p.name.trim()).length} people
+                </p>
               )}
               <p style={{ color: '#aaaaaa', fontSize: '0.9rem', marginTop: '8px' }}>
-                💳 Split payments are only available with UPI
+                💳 UPI IDs will be collected on the next page
               </p>
             </div>
           </div>

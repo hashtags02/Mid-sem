@@ -2,7 +2,7 @@
 
 import React, { useState, useContext, useEffect } from "react";
 import { CartContext } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./PaymentPage.css"; // Reusing the same styles
 
 const SplitPaymentPage = () => {
@@ -15,10 +15,16 @@ const SplitPaymentPage = () => {
   } = useContext(CartContext);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [paymentStatuses, setPaymentStatuses] = useState({});
+  const [upiIds, setUpiIds] = useState({});
+  const [showUpiForm, setShowUpiForm] = useState(false);
+  const [currentPayingPerson, setCurrentPayingPerson] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  const initialPayerUpiId = location.state?.payerUpiId || '';
 
   const totalAmount = calculateTotal();
   const manualSplitSummary = getManualSplitSummary();
@@ -55,27 +61,60 @@ const SplitPaymentPage = () => {
       return;
     }
 
+    // Start UPI collection for the first selected person
+    const firstPersonIndex = selectedPeople[0];
+    setCurrentPayingPerson(firstPersonIndex);
+    setShowUpiForm(true);
+  };
+
+  const processIndividualUPIPayment = () => {
+    const upiId = upiIds[currentPayingPerson];
+    if (!upiId || !upiId.trim()) {
+      alert('Please enter UPI ID for this person');
+      return;
+    }
+
     setIsProcessing(true);
 
     // Simulate payment processing
     setTimeout(() => {
       const newStatuses = { ...paymentStatuses };
-      selectedPeople.forEach(index => {
-        newStatuses[index] = 'completed';
-      });
+      newStatuses[currentPayingPerson] = 'completed';
       setPaymentStatuses(newStatuses);
-      setSelectedPeople([]);
-      setIsProcessing(false);
 
-      // Check if all payments are completed
-      const allCompleted = Object.values(newStatuses).every(status => status === 'completed');
-      if (allCompleted) {
-        setShowSuccess(true);
+      // Remove the completed person from selected list
+      const remainingPeople = selectedPeople.filter(index => index !== currentPayingPerson);
+      setSelectedPeople(remainingPeople);
+
+      setIsProcessing(false);
+      setShowUpiForm(false);
+
+      if (remainingPeople.length > 0) {
+        // Process next person
         setTimeout(() => {
-          clearCart();
-        }, 3000);
+          const nextPersonIndex = remainingPeople[0];
+          setCurrentPayingPerson(nextPersonIndex);
+          setShowUpiForm(true);
+        }, 1000);
+      } else {
+        // Check if all payments are completed
+        const allCompleted = Object.values(newStatuses).every(status => status === 'completed');
+        if (allCompleted) {
+          setShowSuccess(true);
+          setTimeout(() => {
+            clearCart();
+          }, 3000);
+        }
+        setCurrentPayingPerson(null);
       }
     }, 2000);
+  };
+
+  const handleUpiIdChange = (personIndex, upiId) => {
+    setUpiIds(prev => ({
+      ...prev,
+      [personIndex]: upiId
+    }));
   };
 
   const goBack = () => {
@@ -101,6 +140,62 @@ const SplitPaymentPage = () => {
             <button className="primary-btn" onClick={goHome}>
               Back to Home
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showUpiForm && currentPayingPerson !== null) {
+    const currentPerson = manualSplitData[currentPayingPerson];
+    return (
+      <div className="payment-container">
+        <div className="payment-card">
+          <div className="logo">
+            <div className="logo-icon">🍔</div>
+            <span className="logo-text">FoodDelivery</span>
+          </div>
+          
+          <div className="upi-payment-form">
+            <h2>UPI Payment</h2>
+            <p style={{ color: '#aaaaaa', marginBottom: '20px' }}>
+              Enter UPI ID for: <strong style={{ color: '#ff7f00' }}>{currentPerson.name}</strong>
+            </p>
+            <div className="input-group">
+              <label>UPI ID</label>
+              <input
+                type="text"
+                value={upiIds[currentPayingPerson] || ''}
+                onChange={(e) => handleUpiIdChange(currentPayingPerson, e.target.value)}
+                placeholder="Enter UPI ID"
+              />
+            </div>
+            <div className="amount-display">
+              <span>Amount to Pay:</span>
+              <span className="amount">₹{currentPerson.amount}</span>
+            </div>
+            
+            {isProcessing ? (
+              <div className="loading-content">
+                <div className="spinner"></div>
+                <p>Processing payment for {currentPerson.name}...</p>
+              </div>
+            ) : (
+              <>
+                <button className="primary-btn" onClick={processIndividualUPIPayment}>
+                  Pay ₹{currentPerson.amount}
+                </button>
+                <button className="secondary-btn" onClick={() => setShowUpiForm(false)}>
+                  Cancel
+                </button>
+                
+                {selectedPeople.length > 1 && (
+                  <p style={{ color: '#aaaaaa', marginTop: '15px', textAlign: 'center' }}>
+                    {selectedPeople.length - 1} more payments pending
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

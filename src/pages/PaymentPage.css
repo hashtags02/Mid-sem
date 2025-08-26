@@ -126,6 +126,32 @@
   margin-top: 15px;
 }
 
+.split-payment-info {
+  margin-bottom: 25px;
+}
+
+.split-info-card {
+  background: rgba(255, 127, 0, 0.1);
+  border: 2px solid #ff7f00;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.payment-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.payment-option.disabled .payment-details h3 {
+  color: #666666;
+}
+
+.payment-option.disabled .payment-details p {
+  color: #888888;
+}
+
 .split-payment-option {
   margin-bottom: 25px;
   display: flex;

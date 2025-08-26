@@ -45,18 +45,18 @@ const PaymentPage = () => {
     }
     
     if (selectedPaymentMethod === 'cod') {
-      const amount = splitBillEnabled ? splitAmount : totalAmount;
-      showSuccessMessage(`Order placed successfully! You will pay ₹${amount} on delivery.`);
+      // Cash on Delivery doesn't support split payments
+      if (splitBillEnabled) {
+        alert('Split bill is not available for Cash on Delivery. Please choose UPI payment for split bills.');
+        return;
+      }
+      showSuccessMessage(`Order placed successfully! You will pay ₹${totalAmount} on delivery.`);
       return;
     }
     
     if (selectedPaymentMethod === 'upi') {
-      if (splitBillEnabled && splitBillType === 'manual') {
-        // For manual split, redirect to split payment page
-        navigate('/split-payment');
-      } else {
-        setShowUPIForm(true);
-      }
+      // For all UPI payments (including split bills), show UPI form first
+      setShowUPIForm(true);
     }
   };
 
@@ -71,8 +71,23 @@ const PaymentPage = () => {
     // Simulate payment processing
     setTimeout(() => {
       setIsProcessing(false);
-      const amount = splitBillEnabled ? splitAmount : totalAmount;
-      showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${amount}`);
+      
+      if (splitBillEnabled && splitBillType === 'manual') {
+        // For manual split, redirect to split payment page after UPI verification
+        navigate('/split-payment', { 
+          state: { 
+            payerUpiId: upiId,
+            totalAmount: totalAmount 
+          } 
+        });
+      } else {
+        // For regular payments or equal split
+        const amount = splitBillEnabled ? splitAmount : totalAmount;
+        const splitMessage = splitBillEnabled 
+          ? ` (Your share from split bill)` 
+          : '';
+        showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${amount}${splitMessage}`);
+      }
     }, 2000);
   };
 
@@ -197,17 +212,25 @@ const PaymentPage = () => {
           )}
         </div>
         
-        {splitBillEnabled && splitBillType === 'equal' && (
-          <div className="split-payment-option">
-            <label className="checkbox-container">
-              <input
-                type="checkbox"
-                checked={isSplitPayment}
-                onChange={(e) => setIsSplitPayment(e.target.checked)}
-              />
-              <span className="checkmark"></span>
-              Split Payment
-            </label>
+        {splitBillEnabled && (
+          <div className="split-payment-info">
+            <div className="split-info-card">
+              <h3 style={{ color: '#ff7f00', marginBottom: '10px' }}>
+                🔄 Split Bill Enabled
+              </h3>
+              {splitBillType === 'equal' ? (
+                <p style={{ color: '#ffffff', margin: '0' }}>
+                  Split equally - Your share: ₹{splitAmount}
+                </p>
+              ) : (
+                <p style={{ color: '#ffffff', margin: '0' }}>
+                  Manual split configured for {manualSplitData.filter(p => p.name.trim()).length} people
+                </p>
+              )}
+              <p style={{ color: '#aaaaaa', fontSize: '0.9rem', marginTop: '8px' }}>
+                💳 Split payments are only available with UPI
+              </p>
+            </div>
           </div>
         )}
         
@@ -234,13 +257,18 @@ const PaymentPage = () => {
           </div>
           
           <div 
-            className={`payment-option ${selectedPaymentMethod === 'cod' ? 'selected' : ''}`}
-            onClick={() => selectPayment('cod')}
+            className={`payment-option ${selectedPaymentMethod === 'cod' ? 'selected' : ''} ${splitBillEnabled ? 'disabled' : ''}`}
+            onClick={() => !splitBillEnabled && selectPayment('cod')}
+            style={{
+              opacity: splitBillEnabled ? 0.5 : 1,
+              cursor: splitBillEnabled ? 'not-allowed' : 'pointer',
+              pointerEvents: splitBillEnabled ? 'none' : 'auto'
+            }}
           >
             <div className="payment-icon">💵</div>
             <div className="payment-details">
               <h3>Cash on Delivery</h3>
-              <p>Pay when you receive your order</p>
+              <p>{splitBillEnabled ? 'Not available with split bills' : 'Pay when you receive your order'}</p>
             </div>
             <div className="radio-btn">
               <input
@@ -248,7 +276,8 @@ const PaymentPage = () => {
                 name="payment"
                 value="cod"
                 checked={selectedPaymentMethod === 'cod'}
-                onChange={() => selectPayment('cod')}
+                onChange={() => !splitBillEnabled && selectPayment('cod')}
+                disabled={splitBillEnabled}
               />
               <span className="radio-checkmark"></span>
             </div>

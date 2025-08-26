@@ -1,10 +1,12 @@
 // src/CartPage.js
 
 import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import "./CartContent.css";
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const { 
     cartItems, 
     increaseQuantity, 
@@ -31,6 +33,25 @@ const CartPage = () => {
 
   const handlePromoApply = () => {
     alert(`Promo "${promoCode}" applied! (you can add discount logic)`);
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+
+    // Validate manual split if enabled
+    if (splitBillEnabled && splitBillType === 'manual') {
+      const manualSummary = getManualSplitSummary();
+      if (!manualSummary.isValid) {
+        alert('Please complete the manual split configuration before proceeding to checkout.');
+        return;
+      }
+    }
+
+    // Navigate to payment page
+    navigate('/payment');
   };
 
   return (
@@ -187,7 +208,7 @@ const CartPage = () => {
               <button onClick={handlePromoApply}>Apply</button>
             </div>
 
-            <button className="checkout-btn">
+            <button className="checkout-btn" onClick={handleCheckout}>
               {splitBillEnabled ? `Proceed to Checkout (₹ ${splitAmount})` : "Proceed to Checkout"}
             </button>
           </div>

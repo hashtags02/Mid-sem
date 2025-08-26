@@ -11,6 +11,7 @@ const PaymentPage = () => {
     calculateTotal, 
     splitBillEnabled, 
     splitBillType,
+    splitBillCount,
     calculateSplitAmount,
     manualSplitData,
     clearCart 

@@ -94,6 +94,18 @@ const CartPage = () => {
                   />
                   <span className="split-bill-text">Split Bill</span>
                 </label>
+                {splitBillEnabled && (
+                  <div className="split-bill-notice">
+                    <p style={{ 
+                      color: '#ff7f00', 
+                      fontSize: '0.85rem', 
+                      margin: '8px 0 0 0',
+                      fontStyle: 'italic'
+                    }}>
+                      💳 Note: Split bills require UPI payment
+                    </p>
+                  </div>
+                )}
               </div>
 
               {splitBillEnabled && (

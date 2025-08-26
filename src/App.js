@@ -28,6 +28,8 @@ import TestAddToCart from "./components/TestAddToCart";
 import FoodCategorySection from "./components/FoodCategorySection";
 import AllDishesPage from "./components/AllDishesPage";
 import CartPage from "./pages/CartPage";
+import PaymentPage from "./pages/PaymentPage";
+import SplitPaymentPage from "./pages/SplitPaymentPage";
 
 import OldSchoolEateryPage from "./components/OldSchoolEateryPage";
 import DominosPizzaPage from "./components/DominosPizzaPage";
@@ -80,6 +82,10 @@ function App() {
               <Route path="/categories" element={<FoodCategorySection />} />
               <Route path="/all-dishes" element={<AllDishesPage />} />
               <Route path="/cart" element={<CartPage />} />
+              
+              {/* 💳 Payment Routes */}
+              <Route path="/payment" element={<PaymentPage />} />
+              <Route path="/split-payment" element={<SplitPaymentPage />} />
 
               {/* 🍴 Restaurant Pages */}
               <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />

@@ -272,7 +272,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
 });
 
 // Assign an order to current delivery user and mark as out_for_delivery
-router.post('/:id/assign', auth, async (req, res) => {
+router.post('/:id/assign', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOne({ orderId: req.params.id }).lean();
@@ -317,7 +317,7 @@ router.post('/:id/assign', auth, async (req, res) => {
 });
 
 // Restaurant accepts order (confirm)
-router.post('/:id/accept-restaurant', auth, async (req, res) => {
+router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOneAndUpdate(
@@ -357,7 +357,7 @@ router.post('/:id/accept-restaurant', auth, async (req, res) => {
 });
 
 // Restaurant rejects order (cancel)
-router.post('/:id/reject-restaurant', auth, async (req, res) => {
+router.post('/:id/reject-restaurant', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOneAndUpdate(

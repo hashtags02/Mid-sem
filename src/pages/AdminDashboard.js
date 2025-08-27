@@ -43,7 +43,6 @@ export default function AdminDashboard() {
 		ev.addEventListener('order_ready_for_pickup', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_assigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_reassigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
-		ev.addEventListener('order_rejected', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		return () => ev.close();
 	}, []);
 
@@ -71,8 +70,8 @@ export default function AdminDashboard() {
 	};
 
 	const statusBadge = (s) => (
-		<span className={`badge ${s==='pending'?'b-pending':s==='accepted'?'b-accepted':s==='ready_for_pickup'?'b-ready':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
-			s==='pending'?'Pending':s==='accepted'?'Accepted':s==='ready_for_pickup'?'Ready for Pickup':s==='out_for_delivery'?'Out for Delivery':s==='delivered'?'Delivered':'Cancelled'
+		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
+			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
 		}</span>
 	);
 
@@ -83,11 +82,10 @@ export default function AdminDashboard() {
 				<div className="admin-filters">
 					<select value={filter} onChange={e => setFilter(e.target.value)}>
 						<option value="all">All</option>
-						<option value="pending">Pending</option>
-						<option value="accepted">Accepted by Restaurant</option>
-						<option value="ready_for_pickup">Ready for Pickup</option>
-						<option value="out_for_delivery">Out for Delivery</option>
-						<option value="delivered">Delivered</option>
+						<option value="pending">Placed</option>
+						<option value="confirmed">Accepted by Restaurant</option>
+						<option value="out_for_delivery">Assigned to Delivery</option>
+						<option value="delivered">Completed</option>
 						<option value="cancelled">Cancelled</option>
 					</select>
 				</div>

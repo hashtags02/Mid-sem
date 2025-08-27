@@ -34,19 +34,7 @@ const ResturantDashboard = () => {
 
 	const acceptOrder = async (id) => {
 		try {
-			await ordersAPI.acceptByRestaurant(id);
-		} catch (_) {}
-	};
-
-	const markReadyForPickup = async (id) => {
-		try {
-			await ordersAPI.markReadyForPickup(id);
-		} catch (_) {}
-	};
-
-	const rejectOrder = async (id) => {
-		try {
-			await ordersAPI.rejectByRestaurant(id);
+			await ordersAPI.updateStatus(id, 'confirmed');
 		} catch (_) {}
 	};
 
@@ -71,16 +59,9 @@ const ResturantDashboard = () => {
 		const onUpdated = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				let mapped;
-				switch(order.status) {
-					case 'pending': mapped = 'Pending'; break;
-					case 'accepted': mapped = 'Accepted'; break;
-					case 'ready_for_pickup': mapped = 'Ready for Pickup'; break;
-					case 'out_for_delivery': mapped = 'Out for Delivery'; break;
-					case 'delivered': mapped = 'Delivered'; break;
-					case 'cancelled': mapped = 'Cancelled'; break;
-					default: mapped = 'Pending';
-				}
+				const mapped = order.status === 'out_for_delivery'
+					? 'Picked Up'
+					: (order.status === 'delivered' ? 'Delivered' : 'Pending');
 				updateStatusLocal(order.id, mapped);
 			} catch (_) {}
 		};
@@ -102,22 +83,18 @@ const ResturantDashboard = () => {
 		const onAssigned = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				updateStatusLocal(order.id, 'Out for Delivery');
+				updateStatusLocal(order.id, 'Picked Up');
 			} catch (_) {}
 		};
 
 		ev.addEventListener('order_created', onCreated);
 		ev.addEventListener('order_updated', onUpdated);
-		ev.addEventListener('order_accepted', onAccepted);
-		ev.addEventListener('order_ready_for_pickup', onReadyForPickup);
-		ev.addEventListener('order_assigned', onAssigned);
+		ev.addEventListener('order_confirmed', onConfirmed);
 
 		return () => {
 			ev.removeEventListener('order_created', onCreated);
 			ev.removeEventListener('order_updated', onUpdated);
-			ev.removeEventListener('order_accepted', onAccepted);
-			ev.removeEventListener('order_ready_for_pickup', onReadyForPickup);
-			ev.removeEventListener('order_assigned', onAssigned);
+			ev.removeEventListener('order_confirmed', onConfirmed);
 			ev.close();
 		};
 	}, []);
@@ -249,19 +226,20 @@ const ResturantDashboard = () => {
 												)}
 												{o.status === 'Accepted' && (
 													<button
-														onClick={() => markReadyForPickup(o.id)}
+														onClick={() => updateStatusLocal(o.id, 'Delivered')}
 														style={{
 															padding: '6px 12px',
 															borderRadius: 8,
 															border: 'none',
-															fontWeight: 600,
-															fontSize: '12px',
-															background: '#3b82f6',
+															fontWeight: 700,
+															background: '#16a34a',
 															color: '#fff',
-															cursor: 'pointer'
+															cursor: 'pointer',
+															opacity: o.status === 'Accepted' ? 1 : 0.5
 														}}
+														disabled={o.status !== 'Accepted'}
 													>
-														Ready for Pickup
+														Delivered
 													</button>
 												)}
 												{['Ready for Pickup', 'Out for Delivery', 'Delivered', 'Cancelled'].includes(o.status) && (

@@ -84,6 +84,7 @@ app.use('/api/auth', authRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(require('path').join(__dirname, 'uploads')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

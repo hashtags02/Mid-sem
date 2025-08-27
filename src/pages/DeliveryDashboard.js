@@ -29,7 +29,7 @@ const initialAvailable = [
 ];
 
 export default function DeliveryDashboard() {
-	const { user } = useAuth();
+	const { user, updateUser } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
 	const [activeOrder, setActiveOrder] = useState(null);
@@ -89,6 +89,7 @@ export default function DeliveryDashboard() {
 			};
 			const updated = await usersAPI.updateProfile(payload);
 			localStorage.setItem('user', JSON.stringify(updated));
+			updateUser?.(updated);
 			setShowProfile(false);
 		} catch (err) {
 			setSaveError(err?.message || 'Failed to save profile');
@@ -116,7 +117,7 @@ export default function DeliveryDashboard() {
 		<div className="dd-container">
 			<header className="dd-header">
 				<div className="dd-left">
-					<button className="dd-hamburger" aria-label="Open Profile" onClick={() => setShowProfile(true)}>
+					<button className={'dd-hamburger'} aria-label="Open Profile" onClick={() => setShowProfile(true)}>
 						<span></span>
 						<span></span>
 						<span></span>
@@ -142,11 +143,14 @@ export default function DeliveryDashboard() {
 							<h3>Update Profile</h3>
 							<button className="dd-close" onClick={() => setShowProfile(false)}>×</button>
 						</div>
+						<div className="dd-profile-preview">
+							<div className="dd-avatar dd-avatar-large" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
+								{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
+							</div>
+							<div className="dd-profile-name">{profile.name || 'Your Name'}</div>
+						</div>
 						<form onSubmit={handleProfileSave} className="dd-profile-form">
 							<div className="dd-avatar-row">
-								<div className="dd-avatar" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
-									{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
-								</div>
 								<div className="dd-inputs">
 									<input type="file" accept="image/*" onChange={handleAvatarFile} />
 									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />

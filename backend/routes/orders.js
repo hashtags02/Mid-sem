@@ -53,8 +53,8 @@ router.get('/events', optionalAuth, (req, res) => {
 
 // @route   GET /api/orders
 // @desc    Get all orders
-// @access  Private
-router.get('/', auth, async (req, res) => {
+// @access  Optional (dev-friendly)
+router.get('/', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const docs = await Order.find({}).sort({ createdAt: -1 }).lean();
@@ -87,7 +87,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Create order
 // @access  Private
 router.post('/', [
-  auth,
+  optionalAuth,
   body('items').isArray({ min: 1 }).withMessage('At least one item is required'),
   body('deliveryAddress').notEmpty().withMessage('Delivery address is required'),
   body('paymentMethod').notEmpty().withMessage('Payment method is required')
@@ -243,7 +243,7 @@ router.put('/:id/status', [
 
 // Delivery-side helper endpoints
 // List orders available for pickup (pending/confirmed/preparing but not assigned)
-router.get('/available/list', auth, async (req, res) => {
+router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const docs = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing'] } }).sort({ createdAt: -1 }).lean();

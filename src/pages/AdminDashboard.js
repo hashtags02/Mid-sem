@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ordersAPI } from '../services/api';
+import './AdminDashboard.css';
 
 export default function AdminDashboard() {
 	const [orders, setOrders] = useState([]);
@@ -35,46 +36,55 @@ export default function AdminDashboard() {
 		await ordersAPI.reassignDriver(id, { driverName: name || 'Reassigned Driver' });
 	};
 
-	const cell = { padding: '10px 8px', borderBottom: '1px solid #eee' };
+	const statusBadge = (s) => (
+		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
+			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
+		}</span>
+	);
 
 	return (
-		<div style={{ padding: 24 }}>
-			<h2>Admin Dashboard</h2>
-			<div style={{ marginBottom: 12 }}>
-				<select value={filter} onChange={e => setFilter(e.target.value)}>
-					<option value="all">All</option>
-					<option value="pending">Placed</option>
-					<option value="confirmed">Accepted by Restaurant</option>
-					<option value="out_for_delivery">Assigned to Delivery</option>
-					<option value="delivered">Completed</option>
-					<option value="cancelled">Cancelled</option>
-				</select>
+		<div className="admin-page">
+			<div className="admin-header">
+				<h2 className="admin-title">Admin Dashboard</h2>
+				<div className="admin-filters">
+					<select value={filter} onChange={e => setFilter(e.target.value)}>
+						<option value="all">All</option>
+						<option value="pending">Placed</option>
+						<option value="confirmed">Accepted by Restaurant</option>
+						<option value="out_for_delivery">Assigned to Delivery</option>
+						<option value="delivered">Completed</option>
+						<option value="cancelled">Cancelled</option>
+					</select>
+				</div>
 			</div>
-			<div style={{ overflowX: 'auto' }}>
-				<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+
+			<div className="admin-card">
+				<table className="admin-table">
 					<thead>
-						<tr style={{ background: '#fafafa' }}>
-							<th style={cell}>Order ID</th>
-							<th style={cell}>Restaurant</th>
-							<th style={cell}>Items</th>
-							<th style={cell}>Address</th>
-							<th style={cell}>Status</th>
-							<th style={cell}>Actions</th>
+						<tr>
+							<th className="admin-th">Order</th>
+							<th className="admin-th">Restaurant</th>
+							<th className="admin-th">Items</th>
+							<th className="admin-th">Address</th>
+							<th className="admin-th">Status</th>
+							<th className="admin-th">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 						{filtered.map(o => (
-							<tr key={o.id}>
-								<td style={cell}>{o.id}</td>
-								<td style={cell}>{o.restaurantName || o.restaurantId}</td>
-								<td style={cell}>{(o.items || []).map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
-								<td style={cell}>{typeof o.deliveryAddress === 'string' ? o.deliveryAddress : [o.deliveryAddress?.street, o.deliveryAddress?.city].filter(Boolean).join(', ')}</td>
-								<td style={cell}>{o.status}</td>
-								<td style={cell}>
-									<button onClick={() => confirm(o.id)} disabled={o.status !== 'pending'}>Accept</button>
-									<button onClick={() => cancel(o.id)} disabled={o.status === 'delivered'} style={{ marginLeft: 6 }}>Cancel</button>
-									<button onClick={() => reassign(o.id)} disabled={o.status === 'delivered'} style={{ marginLeft: 6 }}>Reassign</button>
-									<button onClick={() => markDelivered(o.id)} disabled={o.status !== 'out_for_delivery'} style={{ marginLeft: 6 }}>Mark Delivered</button>
+							<tr className="admin-row" key={o.id}>
+								<td className="admin-td">{o.id}</td>
+								<td className="admin-td">{o.restaurantName || o.restaurantId}</td>
+								<td className="admin-td">{(o.items || []).map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+								<td className="admin-td">{typeof o.deliveryAddress === 'string' ? o.deliveryAddress : [o.deliveryAddress?.street, o.deliveryAddress?.city].filter(Boolean).join(', ')}</td>
+								<td className="admin-td">{statusBadge(o.status)}</td>
+								<td className="admin-td">
+									<div className="admin-actions">
+										<button className="btn btn-accept" onClick={() => confirm(o.id)} disabled={o.status !== 'pending'}>Accept</button>
+										<button className="btn btn-cancel" onClick={() => cancel(o.id)} disabled={o.status === 'delivered'}>Cancel</button>
+										<button className="btn btn-reassign" onClick={() => reassign(o.id)} disabled={o.status === 'delivered'}>Reassign</button>
+										<button className="btn btn-delivered" onClick={() => markDelivered(o.id)} disabled={o.status !== 'out_for_delivery'}>Mark Delivered</button>
+									</div>
 								</td>
 							</tr>
 						))}

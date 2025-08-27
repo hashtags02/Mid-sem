@@ -79,12 +79,16 @@ const ResturantDashboard = () => {
 	};
 
 	useEffect(() => {
-		const ev = new EventSource((process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api') + '/orders/events');
+		// Try to scope by restaurantId from URL (?restaurantId=...)
+		const urlParams = new URLSearchParams(window.location.search);
+		const restaurantId = urlParams.get('restaurantId') || '';
+		const base = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api');
+		const ev = new EventSource(base + '/orders/events' + (restaurantId ? (`?restaurantId=${encodeURIComponent(restaurantId)}`) : ''));
 		ev.onmessage = () => {};
 		ev.addEventListener('order_created', (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				setOrders(prev => [{ id: order.id, customerName: order.customerName, address: order.dropAddress, restaurantName: order.restaurantName, status: 'Pending', date: new Date().toISOString().slice(0,10) }, ...prev]);
+				setOrders(prev => [{ id: order.id, customerName: order.customerName, address: order.dropAddress, restaurantName: order.restaurantName, status: 'Pending', date: new Date().toISOString().slice(0,10), items: order.items }, ...prev]);
 			} catch (_){ }
 		});
 		ev.addEventListener('order_confirmed', (e) => {
@@ -93,10 +97,16 @@ const ResturantDashboard = () => {
 				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Picked Up' } : o));
 			} catch (_){ }
 		});
+		ev.addEventListener('order_rejected', (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Rejected' } : o));
+			} catch (_){ }
+		});
 		ev.addEventListener('order_updated', (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				const mapStatus = order.status === 'out_for_delivery' ? 'Picked Up' : (order.status === 'delivered' ? 'Delivered' : 'Pending');
+				const mapStatus = order.status === 'out_for_delivery' ? 'Picked Up' : (order.status === 'delivered' ? 'Delivered' : (order.status === 'cancelled' ? 'Rejected' : 'Pending'));
 				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: mapStatus } : o));
 			} catch (_){ }
 		});
@@ -105,7 +115,13 @@ const ResturantDashboard = () => {
 
 	const acceptOrder = async (id) => {
 		try {
-			await ordersAPI.updateStatus(id, 'confirmed');
+			await ordersAPI.acceptByRestaurant(id);
+		} catch (_){ }
+	};
+
+	const rejectOrder = async (id) => {
+		try {
+			await ordersAPI.rejectByRestaurant(id);
 		} catch (_){ }
 	};
 
@@ -197,7 +213,7 @@ const ResturantDashboard = () => {
 											<td style={{ padding: '12px 8px' }}>{o.address}</td>
 											<td style={{ padding: '12px 8px' }}>{o.restaurantName}</td>
 											<td style={{ padding: '12px 8px' }}>
-												{badge(o.status, o.status === 'Delivered' ? '#16a34a' : o.status === 'Picked Up' ? '#3b82f6' : '#f59e0b')}
+												{badge(o.status, o.status === 'Delivered' ? '#16a34a' : o.status === 'Picked Up' ? '#3b82f6' : (o.status === 'Rejected' ? '#ef4444' : '#f59e0b'))}
 											</td>
 											<td style={{ padding: '12px 8px' }}>
 												<div style={{ display: 'flex', gap: 8 }}>
@@ -205,20 +221,21 @@ const ResturantDashboard = () => {
 														onClick={() => acceptOrder(o.id)}
 														style={{
 															padding: '8px 10px', borderRadius: 10, border: 'none', fontWeight: 700,
-															background: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: o.status === 'Delivered' ? 0.5 : 1
+															background: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: o.status !== 'Pending' ? 0.5 : 1
 														}}
 														disabled={o.status !== 'Pending'}
 													>
 														Accept
 													</button>
 													<button
-														onClick={() => updateStatus(o.id, 'Delivered')}
+														onClick={() => rejectOrder(o.id)}
 														style={{
 															padding: '8px 10px', borderRadius: 10, border: 'none', fontWeight: 700,
-															background: '#16a34a', color: '#fff', cursor: 'pointer'
+															background: '#ef4444', color: '#fff', cursor: 'pointer', opacity: o.status !== 'Pending' ? 0.5 : 1
 														}}
+														disabled={o.status !== 'Pending'}
 													>
-														Delivered
+														Reject
 													</button>
 												</div>
 											</td>

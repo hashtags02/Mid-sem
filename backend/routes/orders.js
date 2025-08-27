@@ -10,14 +10,19 @@ let nextOrderNumericId = 1010;
 
 const generateOrderId = () => `ORD-${nextOrderNumericId++}`;
 
-// SSE clients registry
-const sseClients = new Set();
+// SSE clients registry (optionally scoped by restaurantId)
+const sseClients = new Set(); // Set<{ res, restaurantId?: string }>
 
 const broadcastOrderEvent = (type, payload) => {
   const data = `event: ${type}\n` +
                `data: ${JSON.stringify(payload)}\n\n`;
-  for (const res of sseClients) {
-    try { res.write(data); } catch (_) {}
+  for (const client of sseClients) {
+    try {
+      if (client.restaurantId && payload?.restaurantId && client.restaurantId !== String(payload.restaurantId)) {
+        continue;
+      }
+      client.res.write(data);
+    } catch (_) {}
   }
 };
 
@@ -31,7 +36,8 @@ router.get('/events', optionalAuth, (req, res) => {
   // Initial comment to establish stream
   res.write(`: connected\n\n`);
 
-  sseClients.add(res);
+  const client = { res, restaurantId: req.query.restaurantId };
+  sseClients.add(client);
 
   const ping = setInterval(() => {
     try { res.write(`: ping ${Date.now()}\n\n`); } catch (_) {}
@@ -39,7 +45,7 @@ router.get('/events', optionalAuth, (req, res) => {
 
   req.on('close', () => {
     clearInterval(ping);
-    sseClients.delete(res);
+    sseClients.delete(client);
   });
 });
 
@@ -200,6 +206,26 @@ router.post('/:id/accept-restaurant', auth, async (req, res) => {
     res.json(order);
   } catch (error) {
     console.error('Error confirming order:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Restaurant rejects order (cancel)
+router.post('/:id/reject-restaurant', auth, async (req, res) => {
+  try {
+    const order = inMemoryOrders.get(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order cannot be rejected' });
+    }
+    order.status = 'cancelled';
+    inMemoryOrders.set(order.id, order);
+    broadcastOrderEvent('order_rejected', order);
+    res.json(order);
+  } catch (error) {
+    console.error('Error rejecting order:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

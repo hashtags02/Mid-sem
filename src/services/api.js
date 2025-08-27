@@ -190,6 +190,8 @@ export const ordersAPI = {
   }),
   getAvailable: () => apiRequest('/orders/available/list'),
   assign: (id) => apiRequest(`/orders/${id}/assign`, { method: 'POST' }),
+  acceptByRestaurant: (id) => apiRequest(`/orders/${id}/accept-restaurant`, { method: 'POST' }),
+  rejectByRestaurant: (id) => apiRequest(`/orders/${id}/reject-restaurant`, { method: 'POST' }),
 };
 
 export default {

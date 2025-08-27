@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { auth } = require('../middleware/auth');
+const { auth, optionalAuth } = require('../middleware/auth');
 
 // Temporary in-memory store for orders until DB model is ready
 // Note: This is process-local and resets on server restart
@@ -9,6 +9,39 @@ const inMemoryOrders = new Map();
 let nextOrderNumericId = 1010;
 
 const generateOrderId = () => `ORD-${nextOrderNumericId++}`;
+
+// SSE clients registry
+const sseClients = new Set();
+
+const broadcastOrderEvent = (type, payload) => {
+  const data = `event: ${type}\n` +
+               `data: ${JSON.stringify(payload)}\n\n`;
+  for (const res of sseClients) {
+    try { res.write(data); } catch (_) {}
+  }
+};
+
+// SSE endpoint for order events
+router.get('/events', optionalAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  // Initial comment to establish stream
+  res.write(`: connected\n\n`);
+
+  sseClients.add(res);
+
+  const ping = setInterval(() => {
+    try { res.write(`: ping ${Date.now()}\n\n`); } catch (_) {}
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(ping);
+    sseClients.delete(res);
+  });
+});
 
 // @route   GET /api/orders
 // @desc    Get all orders
@@ -61,6 +94,9 @@ router.post('/', [
 
     inMemoryOrders.set(newOrder.id, newOrder);
 
+    // Broadcast creation
+    broadcastOrderEvent('order_created', newOrder);
+
     res.status(201).json(newOrder);
   } catch (error) {
     console.error('Error creating order:', error);
@@ -103,6 +139,10 @@ router.put('/:id/status', [
     }
     order.status = req.body.status;
     inMemoryOrders.set(order.id, order);
+
+    // Broadcast update
+    broadcastOrderEvent('order_updated', order);
+
     res.json(order);
   } catch (error) {
     console.error('Error updating order status:', error);
@@ -135,9 +175,31 @@ router.post('/:id/assign', auth, async (req, res) => {
     order.status = 'out_for_delivery';
     order.driver = { id: req.user?._id || req.user?.id, name: req.user?.name || 'Driver' };
     inMemoryOrders.set(order.id, order);
+    // Broadcast assignment
+    broadcastOrderEvent('order_assigned', order);
     res.json(order);
   } catch (error) {
     console.error('Error assigning order:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Restaurant accepts order (confirm)
+router.post('/:id/accept-restaurant', auth, async (req, res) => {
+  try {
+    const order = inMemoryOrders.get(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    if (!['pending'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order cannot be accepted' });
+    }
+    order.status = 'confirmed';
+    inMemoryOrders.set(order.id, order);
+    broadcastOrderEvent('order_confirmed', order);
+    res.json(order);
+  } catch (error) {
+    console.error('Error confirming order:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

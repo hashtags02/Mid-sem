@@ -108,7 +108,13 @@ export default function DeliveryDashboard() {
 		};
 		load();
 		const id = setInterval(load, 10000);
-		return () => { mounted = false; clearInterval(id); };
+		const ev = new EventSource((process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api') + '/orders/events');
+		const refresh = () => load();
+		ev.addEventListener('order_created', refresh);
+		ev.addEventListener('order_confirmed', refresh);
+		ev.addEventListener('order_updated', refresh);
+		ev.addEventListener('order_assigned', refresh);
+		return () => { mounted = false; clearInterval(id); ev.close(); };
 	}, []);
 
 	return (

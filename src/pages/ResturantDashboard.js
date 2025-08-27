@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { useEffect } from 'react';
+import { ordersAPI } from '../services/api';
 
 // Simple pie chart using CSS conic-gradient (no external deps)
 const PieChart = ({ segments = [], size = 140, innerSize = 70 }) => {
@@ -74,6 +76,37 @@ const ResturantDashboard = () => {
 
 	const updateStatus = (id, nextStatus) => {
 		setOrders(prev => prev.map(o => o.id === id ? { ...o, status: nextStatus } : o));
+	};
+
+	useEffect(() => {
+		const ev = new EventSource((process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api') + '/orders/events');
+		ev.onmessage = () => {};
+		ev.addEventListener('order_created', (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				setOrders(prev => [{ id: order.id, customerName: order.customerName, address: order.dropAddress, restaurantName: order.restaurantName, status: 'Pending', date: new Date().toISOString().slice(0,10) }, ...prev]);
+			} catch (_){ }
+		});
+		ev.addEventListener('order_confirmed', (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Picked Up' } : o));
+			} catch (_){ }
+		});
+		ev.addEventListener('order_updated', (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				const mapStatus = order.status === 'out_for_delivery' ? 'Picked Up' : (order.status === 'delivered' ? 'Delivered' : 'Pending');
+				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: mapStatus } : o));
+			} catch (_){ }
+		});
+		return () => ev.close();
+	}, []);
+
+	const acceptOrder = async (id) => {
+		try {
+			await ordersAPI.updateStatus(id, 'confirmed');
+		} catch (_){ }
 	};
 
 	const pageStyle = {
@@ -169,14 +202,14 @@ const ResturantDashboard = () => {
 											<td style={{ padding: '12px 8px' }}>
 												<div style={{ display: 'flex', gap: 8 }}>
 													<button
-														onClick={() => updateStatus(o.id, 'Picked Up')}
+														onClick={() => acceptOrder(o.id)}
 														style={{
 															padding: '8px 10px', borderRadius: 10, border: 'none', fontWeight: 700,
 															background: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: o.status === 'Delivered' ? 0.5 : 1
 														}}
-														disabled={o.status === 'Delivered'}
+														disabled={o.status !== 'Pending'}
 													>
-														Picked Up
+														Accept
 													</button>
 													<button
 														onClick={() => updateStatus(o.id, 'Delivered')}

@@ -49,12 +49,12 @@ export default function AdminDashboard() {
 	const filtered = useMemo(() => orders.filter(o => filter === 'all' ? true : o.status === filter), [orders, filter]);
 
 	const total = orders.length;
-	const totalPending = orders.filter(o => o.status === 'pending').length;
-	const totalAccepted = orders.filter(o => o.status === 'accepted').length;
+	const totalPending = orders.filter(o => o.status === 'pending' || o.status === 'pending_delivery').length;
+	const totalAccepted = orders.filter(o => o.status === 'accepted' || o.status === 'accepted_delivery').length;
 	const totalReady = orders.filter(o => o.status === 'ready_for_pickup').length;
 	const totalAssigned = orders.filter(o => o.status === 'out_for_delivery').length;
 	const totalDelivered = orders.filter(o => o.status === 'delivered').length;
-	const totalCancelled = orders.filter(o => o.status === 'cancelled').length;
+	const totalCancelled = orders.filter(o => o.status === 'cancelled' || o.status === 'rejected').length;
 	const todayIso = new Date().toISOString().slice(0,10);
 	const earningsToday = orders
 		.filter(o => o.status === 'delivered' && (o.createdAt ? String(o.createdAt).slice(0,10) === todayIso : true))
@@ -70,8 +70,8 @@ export default function AdminDashboard() {
 	};
 
 	const statusBadge = (s) => (
-		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
-			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
+		<span className={`badge ${s==='pending' || s==='pending_delivery' ? 'b-pending' : s==='confirmed' ? 'b-confirmed' : s==='accepted_delivery' ? 'b-confirmed' : s==='out_for_delivery' ? 'b-assigned' : s==='delivered' ? 'b-delivered' : 'b-cancelled'}`}>{
+			s==='pending_delivery' ? 'Pending Delivery' : s==='accepted_delivery' ? 'Accepted by Delivery' : s==='pending' ? 'Placed' : s==='confirmed' ? 'Accepted' : s==='out_for_delivery' ? 'Assigned' : s==='delivered' ? 'Delivered' : 'Cancelled'
 		}</span>
 	);
 
@@ -82,8 +82,10 @@ export default function AdminDashboard() {
 				<div className="admin-filters">
 					<select value={filter} onChange={e => setFilter(e.target.value)}>
 						<option value="all">All</option>
+						<option value="pending_delivery">Pending Delivery</option>
 						<option value="pending">Placed</option>
 						<option value="confirmed">Accepted by Restaurant</option>
+						<option value="accepted_delivery">Accepted by Delivery</option>
 						<option value="out_for_delivery">Assigned to Delivery</option>
 						<option value="delivered">Completed</option>
 						<option value="cancelled">Cancelled</option>

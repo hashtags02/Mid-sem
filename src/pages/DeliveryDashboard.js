@@ -10,6 +10,7 @@ export default function DeliveryDashboard() {
 	const { user, updateUser } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
+	const [pendingOrders, setPendingOrders] = useState([]);
 	const [activeOrder, setActiveOrder] = useState(null);
 	const [completedOrders, setCompletedOrders] = useState([]);
 	const [showProfile, setShowProfile] = useState(false);
@@ -39,15 +40,23 @@ export default function DeliveryDashboard() {
 	const weeklyEarnings = dailyEarnings; // For demo purposes, same as daily
 
 	const acceptOrder = async (orderId) => {
-		if (!isOnline || activeOrder) return;
-		const order = availableOrders.find(o => o.id === orderId);
+		if (!isOnline) return;
+		const order = pendingOrders.find(o => o.id === orderId);
 		if (!order) return;
 		try {
-			const assigned = await ordersAPI.assign(orderId);
-			setActiveOrder({ ...assigned, status: 'Out for Delivery' });
-			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+			const updated = await ordersAPI.updateStatus(orderId, 'accepted_delivery');
+			setPendingOrders(prev => prev.filter(o => o.id !== orderId));
 		} catch (e) {
 			console.error('Failed to accept order', e);
+		}
+	};
+
+	const rejectOrder = async (orderId) => {
+		try {
+			await ordersAPI.updateStatus(orderId, 'rejected');
+			setPendingOrders(prev => prev.filter(o => o.id !== orderId));
+		} catch (e) {
+			console.error('Failed to reject order', e);
 		}
 	};
 
@@ -114,12 +123,12 @@ export default function DeliveryDashboard() {
 				if ((!Array.isArray(list) || list.length === 0)) {
 					try {
 						const all = await ordersAPI.getAll();
-						list = (all || []).filter(o => ['pending','confirmed','preparing'].includes(o.status));
+						list = (all || []).filter(o => ['pending_delivery'].includes(o.status));
 					} catch (_) {}
 				}
-				if (mounted) setAvailableOrders((list || []).filter(o => o.status === 'ready_for_pickup'));
+				if (mounted) setPendingOrders((list || []).filter(o => o.status === 'pending_delivery'));
 			} catch (e) {
-				if (mounted) setAvailableOrders([]);
+				if (mounted) setPendingOrders([]);
 			}
 		};
 		load();
@@ -156,39 +165,46 @@ export default function DeliveryDashboard() {
 				</div>
 			</header>
 
-			{showProfile && (
-				<div className="dd-profile-modal">
-					<div className="dd-profile-card">
-						<div className="dd-profile-header">
-							<h3>Update Profile</h3>
-							<button className="dd-close" onClick={() => setShowProfile(false)}>×</button>
-						</div>
-						<div className="dd-profile-preview">
-							<div className="dd-avatar dd-avatar-large" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
-								{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
-							</div>
-							<div className="dd-profile-name">{profile.name || 'Your Name'}</div>
-						</div>
-						<form onSubmit={handleProfileSave} className="dd-profile-form">
-							<div className="dd-avatar-row">
-								<div className="dd-inputs">
-									<input type="file" accept="image/*" onChange={handleAvatarFile} />
-									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />
-									<input type="text" placeholder="Full Name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
-									<input type="text" placeholder="Bike Number (e.g., MH12 AB 1234)" value={profile.bikeNumber} onChange={(e) => setProfile({ ...profile, bikeNumber: e.target.value.toUpperCase() })} required />
-									<input type="tel" value={user?.phone || ''} readOnly />
-									<div className="dd-hint">Contact number is your login phone and used for tracking.</div>
-									{saveError && <div className="dd-hint" style={{ color: '#ef4444' }}>{saveError}</div>}
+			<section className="dd-section">
+				<div className="dd-section-header">
+					<h2>Pending Orders</h2>
+					<span className="dd-chip">{pendingOrders.length}</span>
+				</div>
+				{pendingOrders.length === 0 ? (
+					<div className="dd-empty">No pending orders right now.</div>
+				) : (
+					<div className="dd-list">
+						{pendingOrders.map(order => (
+							<div key={order.id} className="dd-order-card">
+								<div className="dd-order-top">
+									<div className="dd-order-id">{order.id}</div>
+									<div className={`dd-status ${'dd-status-pending'}`}>{order.paymentType}</div>
+								</div>
+								<div className="dd-order-body">
+									<div className="dd-rowline"><span className="dd-key">Items:</span> <span className="dd-val">{(order.items || []).map(i => `${i.name} x${i.quantity || 1}`).join(', ')}</span></div>
+									<div className="dd-rowline"><span className="dd-key">Drop:</span> <span className="dd-val">{order.dropAddress || (typeof order.deliveryAddress === 'string' ? order.deliveryAddress : [order.deliveryAddress?.street, order.deliveryAddress?.city].filter(Boolean).join(', '))}</span></div>
+									<div className="dd-rowline"><span className="dd-key">Total:</span> <span className="dd-val">₹{order.totalAmount}</span></div>
+								</div>
+								<div className="dd-order-actions">
+									<button
+										className="dd-btn dd-btn-pick"
+										onClick={() => acceptOrder(order.id)}
+										disabled={!isOnline}
+									>
+										Accept
+									</button>
+									<button
+										className="dd-btn dd-btn-offline"
+										onClick={() => rejectOrder(order.id)}
+									>
+										Reject
+									</button>
 								</div>
 							</div>
-							<div className="dd-profile-actions">
-								<button type="button" className="dd-btn dd-btn-offline" onClick={() => setShowProfile(false)}>Cancel</button>
-								<button type="submit" className="dd-btn dd-btn-pick" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-							</div>
-						</form>
+						))}
 					</div>
-				</div>
-			)}
+				)}
+			</section>
 
 			<div className="dd-grid">
 				<section className="dd-section">

@@ -116,7 +116,7 @@ router.post('/', [
         deliveryInstructions: deliveryInstructions || '',
         paymentMethod,
         paymentStatus: paymentStatus || 'pending',
-        status: 'pending',
+        status: (paymentStatus === 'paid') ? 'pending_delivery' : 'pending',
         payoutAmount: calcPayout,
       });
       const response = {
@@ -150,7 +150,7 @@ router.post('/', [
       deliveryInstructions: deliveryInstructions || '',
       paymentMethod,
       createdAt: new Date().toISOString(),
-      status: 'pending',
+      status: (paymentStatus === 'paid') ? 'pending_delivery' : 'pending',
       payoutAmount: calcPayout,
       restaurantName: req.body.restaurantName || 'Restaurant',
       pickupAddress: req.body.pickupAddress || 'Restaurant Address',
@@ -202,7 +202,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id/status', [
   auth,
-  body('status').isIn(['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])
+  body('status').isIn(['pending', 'pending_delivery', 'accepted_delivery', 'rejected', 'out_for_delivery', 'delivered', 'cancelled'])
     .withMessage('Invalid order status')
 ], async (req, res) => {
   try {
@@ -247,7 +247,7 @@ router.put('/:id/status', [
 router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing'] } }).sort({ createdAt: -1 }).lean();
+      const docs = await Order.find({ status: { $in: ['pending_delivery'] } }).sort({ createdAt: -1 }).lean();
       const mapped = docs.map(doc => ({
         id: doc.orderId,
         restaurantId: doc.restaurantId,
@@ -264,7 +264,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
       }));
       return res.json(mapped);
     }
-    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status));
+    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending_delivery'].includes(o.status));
     return res.json(available);
   } catch (error) {
     console.error('Error fetching available orders:', error);
@@ -278,7 +278,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOne({ orderId: req.params.id }).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });
-      if (!['pending', 'confirmed', 'preparing'].includes(doc.status)) {
+      if (!['pending_delivery'].includes(doc.status)) {
         return res.status(400).json({ error: 'Order is not available for assignment' });
       }
       const updated = await Order.findOneAndUpdate(
@@ -303,7 +303,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     }
     const order = inMemoryOrders.get(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
+    if (!['pending_delivery'].includes(order.status)) {
       return res.status(400).json({ error: 'Order is not available for assignment' });
     }
     order.status = 'out_for_delivery';

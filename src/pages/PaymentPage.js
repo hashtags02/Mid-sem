@@ -45,7 +45,7 @@ const PaymentPage = () => {
         items: cartItems.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
         deliveryAddress: 'Customer address',
         paymentMethod: paymentMethodLabel === 'cod' ? 'cash' : 'upi',
-        paymentStatus: paymentMethodLabel === 'cod' ? 'pending' : 'paid', // Set payment status based on payment method
+        paymentStatus: paymentMethodLabel === 'cod' ? 'pending' : 'paid',
         restaurantId: cartItems[0]?.restaurantId || 'demo-restaurant',
         restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
         pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location'

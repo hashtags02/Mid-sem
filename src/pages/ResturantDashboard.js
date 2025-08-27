@@ -32,9 +32,26 @@ const ResturantDashboard = () => {
 		setOrders(prev => prev.map(o => o.id === id ? { ...o, status: nextStatus } : o));
 	};
 
+	// accept order
 	const acceptOrder = async (id) => {
 		try {
 			await ordersAPI.updateStatus(id, 'confirmed');
+		} catch (_) {}
+	};
+
+	// reject order
+	const rejectOrder = async (id) => {
+		try {
+			await ordersAPI.updateStatus(id, 'rejected'); // or "cancelled" if backend expects that
+			updateStatusLocal(id, 'Cancelled');
+		} catch (_) {}
+	};
+
+	// handle order confirmed event from SSE
+	const onConfirmed = (e) => {
+		try {
+			const order = JSON.parse(e.data);
+			updateStatusLocal(order.id, 'Accepted');
 		} catch (_) {}
 	};
 
@@ -60,7 +77,7 @@ const ResturantDashboard = () => {
 			try {
 				const order = JSON.parse(e.data);
 				const mapped = order.status === 'out_for_delivery'
-					? 'Picked Up'
+					? 'Out for Delivery'
 					: (order.status === 'delivered' ? 'Delivered' : 'Pending');
 				updateStatusLocal(order.id, mapped);
 			} catch (_) {}
@@ -83,18 +100,24 @@ const ResturantDashboard = () => {
 		const onAssigned = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				updateStatusLocal(order.id, 'Picked Up');
+				updateStatusLocal(order.id, 'Out for Delivery');
 			} catch (_) {}
 		};
 
 		ev.addEventListener('order_created', onCreated);
 		ev.addEventListener('order_updated', onUpdated);
 		ev.addEventListener('order_confirmed', onConfirmed);
+		ev.addEventListener('order_accepted', onAccepted);
+		ev.addEventListener('order_ready', onReadyForPickup);
+		ev.addEventListener('order_assigned', onAssigned);
 
 		return () => {
 			ev.removeEventListener('order_created', onCreated);
 			ev.removeEventListener('order_updated', onUpdated);
 			ev.removeEventListener('order_confirmed', onConfirmed);
+			ev.removeEventListener('order_accepted', onAccepted);
+			ev.removeEventListener('order_ready', onReadyForPickup);
+			ev.removeEventListener('order_assigned', onAssigned);
 			ev.close();
 		};
 	}, []);
@@ -178,80 +201,80 @@ const ResturantDashboard = () => {
 											<td style={{ padding: '12px 8px' }}>{o.customerName}</td>
 											<td style={{ padding: '12px 8px' }}>{o.address}</td>
 											<td style={{ padding: '12px 8px' }}>{o.restaurantName}</td>
-																					<td style={{ padding: '12px 8px' }}>
-											{badge(o.status, 
-												o.status === 'Delivered' ? '#16a34a' : 
-												o.status === 'Out for Delivery' ? '#3b82f6' : 
-												o.status === 'Ready for Pickup' ? '#10b981' :
-												o.status === 'Accepted' ? '#8b5cf6' :
-												o.status === 'Cancelled' ? '#ef4444' :
-												'#f59e0b'
-											)}
-										</td>
-																					<td style={{ padding: '12px 8px' }}>
-											<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-												{o.status === 'Pending' && (
-													<>
+											<td style={{ padding: '12px 8px' }}>
+												{badge(o.status, 
+													o.status === 'Delivered' ? '#16a34a' : 
+													o.status === 'Out for Delivery' ? '#3b82f6' : 
+													o.status === 'Ready for Pickup' ? '#10b981' :
+													o.status === 'Accepted' ? '#8b5cf6' :
+													o.status === 'Cancelled' ? '#ef4444' :
+													'#f59e0b'
+												)}
+											</td>
+											<td style={{ padding: '12px 8px' }}>
+												<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+													{o.status === 'Pending' && (
+														<>
+															<button
+																onClick={() => acceptOrder(o.id)}
+																style={{
+																	padding: '6px 12px',
+																	borderRadius: 8,
+																	border: 'none',
+																	fontWeight: 600,
+																	fontSize: '12px',
+																	background: '#10b981',
+																	color: '#fff',
+																	cursor: 'pointer'
+																}}
+															>
+																Accept
+															</button>
+															<button
+																onClick={() => rejectOrder(o.id)}
+																style={{
+																	padding: '6px 12px',
+																	borderRadius: 8,
+																	border: 'none',
+																	fontWeight: 600,
+																	fontSize: '12px',
+																	background: '#ef4444',
+																	color: '#fff',
+																	cursor: 'pointer'
+																}}
+															>
+																Reject
+															</button>
+														</>
+													)}
+													{o.status === 'Accepted' && (
 														<button
-															onClick={() => acceptOrder(o.id)}
+															onClick={() => updateStatusLocal(o.id, 'Delivered')}
 															style={{
 																padding: '6px 12px',
 																borderRadius: 8,
 																border: 'none',
-																fontWeight: 600,
-																fontSize: '12px',
-																background: '#10b981',
+																fontWeight: 700,
+																background: '#16a34a',
 																color: '#fff',
-																cursor: 'pointer'
+																cursor: 'pointer',
+																opacity: o.status === 'Accepted' ? 1 : 0.5
 															}}
+															disabled={o.status !== 'Accepted'}
 														>
-															Accept
+															Delivered
 														</button>
-														<button
-															onClick={() => rejectOrder(o.id)}
-															style={{
-																padding: '6px 12px',
-																borderRadius: 8,
-																border: 'none',
-																fontWeight: 600,
-																fontSize: '12px',
-																background: '#ef4444',
-																color: '#fff',
-																cursor: 'pointer'
-															}}
-														>
-															Reject
-														</button>
-													</>
-												)}
-												{o.status === 'Accepted' && (
-													<button
-														onClick={() => updateStatusLocal(o.id, 'Delivered')}
-														style={{
-															padding: '6px 12px',
-															borderRadius: 8,
-															border: 'none',
-															fontWeight: 700,
-															background: '#16a34a',
-															color: '#fff',
-															cursor: 'pointer',
-															opacity: o.status === 'Accepted' ? 1 : 0.5
-														}}
-														disabled={o.status !== 'Accepted'}
-													>
-														Delivered
-													</button>
-												)}
-												{['Ready for Pickup', 'Out for Delivery', 'Delivered', 'Cancelled'].includes(o.status) && (
-													<span style={{ 
-														padding: '6px 12px', 
-														color: '#6b7280', 
-														fontSize: '12px',
-														fontStyle: 'italic'
-													}}>No actions available</span>
-												)}
-											</div>
-										</td>
+													)}
+													{['Ready for Pickup', 'Out for Delivery', 'Delivered', 'Cancelled'].includes(o.status) && (
+														<span style={{ 
+															padding: '6px 12px', 
+															color: '#6b7280', 
+															fontSize: '12px',
+															fontStyle: 'italic'
+														}}>No actions available</span>
+													)}
+												</div>
+											</td>
 										</tr>
 									))}
 								</tbody>

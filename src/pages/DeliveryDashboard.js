@@ -45,6 +45,8 @@ export default function DeliveryDashboard() {
 		try {
 			const updated = await ordersAPI.updateStatus(orderId, 'accepted_delivery');
 			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+			// Move to Active Order after accept
+			setActiveOrder({ ...order, status: 'Accepted' });
 		} catch (e) {
 			console.error('Failed to accept order', e);
 		}
@@ -63,7 +65,8 @@ export default function DeliveryDashboard() {
 		if (!activeOrder) return;
 		try {
 			if (newStatus === 'Picked Up') {
-				// This is just a local UI status change - order is still out_for_delivery in backend
+				// Update backend to out_for_delivery and reflect in UI as Picked Up
+				await ordersAPI.updateStatus(activeOrder.id, 'out_for_delivery');
 				setActiveOrder(prev => ({ ...prev, status: 'Picked Up' }));
 				return;
 			}
@@ -225,16 +228,16 @@ export default function DeliveryDashboard() {
 								<button
 									className="dd-btn dd-btn-pick"
 									onClick={() => updateActiveStatus('Picked Up')}
-									disabled={activeOrder.status !== 'Out for Delivery'}
+									disabled={activeOrder.status !== 'Accepted'}
 								>
-									Picked Up
+									Picked Up from Restaurant
 								</button>
 								<button
 									className="dd-btn dd-btn-deliver"
 									onClick={() => updateActiveStatus('Delivered')}
 									disabled={activeOrder.status !== 'Picked Up'}
 								>
-									Delivered
+									Delivered to Customer
 								</button>
 							</div>
 						</div>

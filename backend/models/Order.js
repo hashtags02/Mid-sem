@@ -15,6 +15,7 @@ const orderSchema = new mongoose.Schema({
   restaurantId: { type: String },
   restaurantName: { type: String },
   items: { type: [orderItemSchema], default: [] },
+  totalAmount: { type: Number },
   deliveryAddress: { type: mongoose.Schema.Types.Mixed },
   deliveryInstructions: { type: String },
   paymentMethod: { type: String, enum: ['cash', 'card', 'upi', 'wallet'] },

@@ -56,7 +56,7 @@ export default function AdminDashboard() {
 	const todayIso = new Date().toISOString().slice(0,10);
 	const earningsToday = orders
 		.filter(o => o.status === 'delivered' && (o.createdAt ? String(o.createdAt).slice(0,10) === todayIso : true))
-		.reduce((sum, o) => sum + (Number(o.payoutAmount) || 0), 0);
+		.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
 
 	const confirm = async (id) => { await ordersAPI.updateStatus(id, 'confirmed'); };
 	const cancel = async (id) => { await ordersAPI.updateStatus(id, 'cancelled'); };

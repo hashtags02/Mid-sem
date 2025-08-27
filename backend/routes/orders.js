@@ -63,6 +63,7 @@ router.get('/', auth, async (req, res) => {
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         paymentMethod: doc.paymentMethod,
         status: doc.status,
@@ -100,6 +101,7 @@ router.post('/', [
     const { items, deliveryAddress, paymentMethod, deliveryInstructions, restaurantId, customerName, customerPhone } = req.body;
 
     const calcPayout = Math.max(30, Math.round(items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0) * 0.1));
+    const calcTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const orderId = generateOrderId();
@@ -109,6 +111,7 @@ router.post('/', [
         restaurantId: restaurantId || undefined,
         restaurantName: req.body.restaurantName || 'Restaurant',
         items,
+        totalAmount: calcTotal,
         deliveryAddress,
         deliveryInstructions: deliveryInstructions || '',
         paymentMethod,
@@ -120,6 +123,7 @@ router.post('/', [
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         paymentMethod: doc.paymentMethod,
         status: doc.status,
@@ -140,6 +144,7 @@ router.post('/', [
       customerName: customerName || req.user?.name || 'Customer',
       customerPhone: customerPhone || req.user?.phone || 'N/A',
       items,
+      totalAmount: calcTotal,
       deliveryAddress,
       deliveryInstructions: deliveryInstructions || '',
       paymentMethod,
@@ -173,6 +178,7 @@ router.get('/:id', auth, async (req, res) => {
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         paymentMethod: doc.paymentMethod,
         status: doc.status,
@@ -246,6 +252,7 @@ router.get('/available/list', auth, async (req, res) => {
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
@@ -283,6 +290,7 @@ router.post('/:id/assign', auth, async (req, res) => {
         restaurantId: updated.restaurantId,
         restaurantName: updated.restaurantName,
         items: updated.items,
+        totalAmount: updated.totalAmount,
         deliveryAddress: updated.deliveryAddress,
         paymentMethod: updated.paymentMethod,
         status: updated.status,
@@ -323,6 +331,7 @@ router.post('/:id/accept-restaurant', auth, async (req, res) => {
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         paymentMethod: doc.paymentMethod,
         status: doc.status,
@@ -362,6 +371,7 @@ router.post('/:id/reject-restaurant', auth, async (req, res) => {
         restaurantId: doc.restaurantId,
         restaurantName: doc.restaurantName,
         items: doc.items,
+        totalAmount: doc.totalAmount,
         deliveryAddress: doc.deliveryAddress,
         paymentMethod: doc.paymentMethod,
         status: doc.status,

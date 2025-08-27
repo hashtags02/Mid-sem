@@ -13,7 +13,7 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   // Add auth token if available
-  const token = localStorage.getItem('jwt_token');
+  const token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

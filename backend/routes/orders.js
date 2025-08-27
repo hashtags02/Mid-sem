@@ -219,7 +219,7 @@ router.put('/:id/status', [
 router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({ status: { $in: ['pending_delivery', 'ready_for_pickup'] } }).sort({ createdAt: -1 }).lean();
+      const docs = await Order.find({ acceptedByRestaurant: true, status: { $in: ['pending_delivery', 'ready_for_pickup'] } }).sort({ createdAt: -1 }).lean();
       const mapped = docs.map(doc => ({
         id: doc.orderId,
         restaurantId: doc.restaurantId,
@@ -285,7 +285,7 @@ router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOneAndUpdate(
         { orderId: req.params.id },
-        { $set: { status: 'pending_delivery' } },
+        { $set: { status: 'pending_delivery', acceptedByRestaurant: true, acceptedAt: new Date() } },
         { new: true }
       ).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });
@@ -317,7 +317,7 @@ router.post('/:id/ready-for-pickup', optionalAuth, async (req, res) => {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOneAndUpdate(
         { orderId: req.params.id },
-        { $set: { status: 'ready_for_pickup' } },
+        { $set: { status: 'ready_for_pickup', acceptedByRestaurant: true, acceptedAt: new Date() } },
         { new: true }
       ).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });

@@ -23,6 +23,8 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'pending_delivery', 'accepted_delivery', 'rejected', 'confirmed', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'cancelled'], default: 'pending' },
   payoutAmount: { type: Number },
   driver: { type: mongoose.Schema.Types.Mixed },
+  acceptedByRestaurant: { type: Boolean, default: false },
+  acceptedAt: { type: Date },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

@@ -100,7 +100,7 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { items, deliveryAddress, paymentMethod, paymentStatus, deliveryInstructions, restaurantId, customerName, customerPhone, discount } = req.body;
+    const { items, deliveryAddress, paymentMethod, paymentStatus, deliveryInstructions, restaurantId, customerName, customerPhone, discount, customerLocation } = req.body;
 
     const rawTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
     const appliedDiscount = Math.max(0, Math.min(Number(discount) || 0, rawTotal));
@@ -119,6 +119,7 @@ router.post('/', [
       items,
       totalAmount: calcTotal,
       deliveryAddress,
+      customerLocation: (customerLocation && typeof customerLocation.lat === 'number' && typeof customerLocation.lng === 'number') ? { lat: customerLocation.lat, lng: customerLocation.lng } : undefined,
       deliveryInstructions: deliveryInstructions || '',
       paymentMethod,
       paymentStatus: paymentStatus || 'pending',
@@ -132,6 +133,7 @@ router.post('/', [
       items: doc.items,
       totalAmount: doc.totalAmount,
       deliveryAddress: doc.deliveryAddress,
+      customerLocation: doc.customerLocation,
       deliveryInstructions: doc.deliveryInstructions,
       paymentMethod: doc.paymentMethod,
       status: doc.status,

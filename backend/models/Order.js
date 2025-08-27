@@ -17,6 +17,10 @@ const orderSchema = new mongoose.Schema({
   items: { type: [orderItemSchema], default: [] },
   totalAmount: { type: Number },
   deliveryAddress: { type: mongoose.Schema.Types.Mixed },
+  customerLocation: {
+    type: new mongoose.Schema({ lat: Number, lng: Number }, { _id: false }),
+    default: undefined
+  },
   deliveryInstructions: { type: String },
   paymentMethod: { type: String, enum: ['cash', 'card', 'upi', 'wallet'] },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },

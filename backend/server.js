@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,6 +11,8 @@ require('dotenv').config();
 const admin = require('firebase-admin');
 
 const app = express();
+const server = http.createServer(app);
+let io = null;
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurants');
@@ -109,6 +112,43 @@ try {
   }
 }
 
+// Socket.IO (live driver tracking)
+try {
+  const { Server } = require('socket.io');
+  io = new Server(server, {
+    cors: {
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        process.env.FRONTEND_URL
+      ].filter(Boolean),
+      methods: ['GET', 'POST']
+    }
+  });
+
+  io.on('connection', (socket) => {
+    // Join a room per order
+    socket.on('join_order', ({ orderId }) => {
+      if (orderId) socket.join(String(orderId));
+    });
+
+    // Driver sends live location: { orderId, lat, lng }
+    socket.on('driver_location', (payload) => {
+      try {
+        const { orderId, lat, lng } = payload || {};
+        if (!orderId) return;
+        io.to(String(orderId)).emit('driver_location', { lat, lng, orderId, ts: Date.now() });
+      } catch (_) {}
+    });
+
+    socket.on('disconnect', () => {});
+  });
+  console.log('🛰️  Socket.IO initialized');
+} catch (e) {
+  console.log('⚠️  Socket.IO not initialized:', e.message);
+}
+
 // Routes
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/dishes', dishRoutes);
@@ -147,7 +187,7 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 CraveCart Backend running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔧 Mode: ${dbConnected ? 'Full' : 'Basic'}`);

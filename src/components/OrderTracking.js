@@ -1,218 +1,20 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
-import { GOOGLE_MAPS_CONFIG, VadodaraUtils, MAP_ICONS } from '../config/googleMaps';
+import React, { useState } from 'react';
+import LeafletTracking from './LeafletTracking';
+import { GOOGLE_MAPS_CONFIG } from '../config/googleMaps';
 import './OrderTracking.css';
 
 const OrderTracking = ({ orderId, onClose }) => {
-  const [orderData, setOrderData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [map, setMap] = useState(null);
-  const [markers, setMarkers] = useState({});
-  const [routePath, setRoutePath] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  
-  const mapRef = useRef(null);
-  const intervalRef = useRef(null);
+  const [orderData] = useState({ status: 'out_for_delivery', orderId });
+  const [isLoading] = useState(false);
+  const [error] = useState(null);
 
   // Load Google Maps
-  const initializeMap = useCallback(async () => {
-    try {
-      const loader = new Loader({
-        apiKey: GOOGLE_MAPS_CONFIG.apiKey,
-        version: 'weekly',
-        libraries: ['geometry', 'places']
-      });
-
-      const google = await loader.load();
-      
-      if (mapRef.current) {
-        const mapInstance = new google.maps.Map(mapRef.current, {
-          center: GOOGLE_MAPS_CONFIG.VADODARA_CENTER,
-          zoom: GOOGLE_MAPS_CONFIG.TRACKING_ZOOM,
-          styles: GOOGLE_MAPS_CONFIG.mapStyles,
-          ...GOOGLE_MAPS_CONFIG.mapOptions
-        });
-
-        setMap(mapInstance);
-        return mapInstance;
-      }
-    } catch (error) {
-      console.error('Error loading Google Maps:', error);
-      setError('Failed to load map. Please check your internet connection.');
-    }
-  }, []);
+  // Google Maps implementation replaced by Leaflet (OSM) for free usage
 
   // Fetch order tracking data
-  const fetchTrackingData = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/orders/tracking/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+  // Tracking data is now loaded within LeafletTracking via /api/orders/:id
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch tracking data');
-      }
-
-      const data = await response.json();
-      setOrderData(data);
-      setLastUpdate(new Date());
-      
-      return data;
-    } catch (error) {
-      console.error('Error fetching tracking data:', error);
-      setError('Failed to load tracking information');
-    }
-  }, [orderId]);
-
-  // Update map markers and route
-  const updateMapDisplay = useCallback(async (data, mapInstance) => {
-    if (!mapInstance || !data) return;
-
-    const google = window.google;
-    const bounds = new google.maps.LatLngBounds();
-
-    // Clear existing markers
-    Object.values(markers).forEach(marker => marker.setMap(null));
-    if (routePath) routePath.setMap(null);
-
-    const newMarkers = {};
-
-    // Restaurant marker
-    if (data.restaurant && data.restaurant.location) {
-      const restaurantMarker = new google.maps.Marker({
-        position: {
-          lat: data.restaurant.location.latitude,
-          lng: data.restaurant.location.longitude
-        },
-        map: mapInstance,
-        title: data.restaurant.name,
-        icon: MAP_ICONS.RESTAURANT
-      });
-
-      const restaurantInfo = new google.maps.InfoWindow({
-        content: `
-          <div class="marker-info">
-            <h3>${data.restaurant.name}</h3>
-            <p>📍 ${data.restaurant.address}</p>
-            <p>📞 ${data.restaurant.phone}</p>
-          </div>
-        `
-      });
-
-      restaurantMarker.addListener('click', () => {
-        restaurantInfo.open(mapInstance, restaurantMarker);
-      });
-
-      newMarkers.restaurant = restaurantMarker;
-      bounds.extend(restaurantMarker.getPosition());
-    }
-
-    // Delivery location marker
-    if (data.deliveryAddress && data.deliveryAddress.coordinates) {
-      const deliveryMarker = new google.maps.Marker({
-        position: {
-          lat: data.deliveryAddress.coordinates.latitude,
-          lng: data.deliveryAddress.coordinates.longitude
-        },
-        map: mapInstance,
-        title: 'Delivery Location',
-        icon: MAP_ICONS.DELIVERY_LOCATION
-      });
-
-      const deliveryInfo = new google.maps.InfoWindow({
-        content: `
-          <div class="marker-info">
-            <h3>🏠 Delivery Location</h3>
-            <p>${data.deliveryAddress.street}</p>
-            <p>${data.deliveryAddress.city}</p>
-          </div>
-        `
-      });
-
-      deliveryMarker.addListener('click', () => {
-        deliveryInfo.open(mapInstance, deliveryMarker);
-      });
-
-      newMarkers.delivery = deliveryMarker;
-      bounds.extend(deliveryMarker.getPosition());
-    }
-
-    // Driver marker (if out for delivery)
-    if (data.tracking?.currentLocation && data.status === 'out_for_delivery') {
-      const driverMarker = new google.maps.Marker({
-        position: {
-          lat: data.tracking.currentLocation.latitude,
-          lng: data.tracking.currentLocation.longitude
-        },
-        map: mapInstance,
-        title: `Driver: ${data.driver?.name || 'Unknown'}`,
-        icon: MAP_ICONS.DRIVER_MOVING,
-        animation: google.maps.Animation.BOUNCE
-      });
-
-      const driverInfo = new google.maps.InfoWindow({
-        content: `
-          <div class="marker-info">
-            <h3>🚗 ${data.driver?.name || 'Driver'}</h3>
-            <p>📞 ${data.driver?.phone || 'N/A'}</p>
-            <p>🚗 ${data.driver?.vehicleNumber || 'N/A'}</p>
-            <p>⭐ Rating: ${data.driver?.rating || 'N/A'}/5</p>
-            <p>📍 Last updated: ${new Date(data.tracking.lastUpdate).toLocaleTimeString()}</p>
-          </div>
-        `
-      });
-
-      driverMarker.addListener('click', () => {
-        driverInfo.open(mapInstance, driverMarker);
-      });
-
-      newMarkers.driver = driverMarker;
-      bounds.extend(driverMarker.getPosition());
-
-      // Draw delivery path if available
-      if (data.tracking.deliveryPath && data.tracking.deliveryPath.length > 1) {
-        const pathCoordinates = data.tracking.deliveryPath.map(point => ({
-          lat: point.latitude,
-          lng: point.longitude
-        }));
-
-        const deliveryPath = new google.maps.Polyline({
-          path: pathCoordinates,
-          geodesic: true,
-          strokeColor: '#FF6B35',
-          strokeOpacity: 1.0,
-          strokeWeight: 3,
-          icons: [{
-            icon: {
-              path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
-              scale: 2,
-              strokeColor: '#FF6B35'
-            },
-            offset: '100%'
-          }]
-        });
-
-        deliveryPath.setMap(mapInstance);
-        setRoutePath(deliveryPath);
-      }
-    }
-
-    setMarkers(newMarkers);
-
-    // Fit map to show all markers
-    if (!bounds.isEmpty()) {
-      mapInstance.fitBounds(bounds);
-      
-      // Ensure minimum zoom level for Vadodara
-      const listener = google.maps.event.addListener(mapInstance, 'idle', () => {
-        if (mapInstance.getZoom() > 16) mapInstance.setZoom(16);
-        google.maps.event.removeListener(listener);
-      });
-    }
-  }, [markers, routePath]);
+  // Removed Google Maps imperative code
 
   // Get status color and icon
   const getStatusInfo = (status) => {
@@ -242,43 +44,7 @@ const OrderTracking = ({ orderId, onClose }) => {
     }
   };
 
-  // Initialize tracking
-  useEffect(() => {
-    const initialize = async () => {
-      setIsLoading(true);
-      
-      try {
-        const mapInstance = await initializeMap();
-        const trackingData = await fetchTrackingData();
-        
-        if (mapInstance && trackingData) {
-          await updateMapDisplay(trackingData, mapInstance);
-        }
-      } catch (error) {
-        console.error('Initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-
-    // Set up polling for live updates
-    intervalRef.current = setInterval(async () => {
-      if (orderData?.status === 'out_for_delivery') {
-        const updatedData = await fetchTrackingData();
-        if (updatedData && map) {
-          await updateMapDisplay(updatedData, map);
-        }
-      }
-    }, 30000); // Update every 30 seconds
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [initializeMap, fetchTrackingData, updateMapDisplay, map, orderData?.status]);
+  // Initialization handled by LeafletTracking + sockets
 
   if (isLoading) {
     return (
@@ -336,13 +102,7 @@ const OrderTracking = ({ orderId, onClose }) => {
 
       <div className="tracking-content">
         <div className="map-section">
-          <div ref={mapRef} className="tracking-map"></div>
-          
-          {lastUpdate && (
-            <div className="last-update">
-              Last updated: {lastUpdate.toLocaleTimeString()}
-            </div>
-          )}
+          <LeafletTracking orderId={orderId} />
         </div>
 
         <div className="tracking-details">

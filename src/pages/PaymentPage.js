@@ -22,6 +22,10 @@ const PaymentPage = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [showUPIForm, setShowUPIForm] = useState(false);
   const [upiId, setUpiId] = useState('');
+  const [addressInput, setAddressInput] = useState('');
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const [customerLocation, setCustomerLocation] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -41,8 +45,34 @@ const PaymentPage = () => {
     setSelectedPaymentMethod(method);
   };
 
+  const geocodeAddress = async () => {
+    setGeoError('');
+    if (!addressInput.trim()) return null;
+    try {
+      setGeoLoading(true);
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}&limit=1`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        const loc = { lat, lng };
+        setCustomerLocation(loc);
+        return loc;
+      }
+      setGeoError('Could not geocode address');
+      return null;
+    } catch (e) {
+      setGeoError('Geocoding failed');
+      return null;
+    } finally {
+      setGeoLoading(false);
+    }
+  };
+
   const createBackendOrder = async (paymentMethodLabel) => {
     try {
+      const loc = customerLocation || await geocodeAddress();
       const orderPayload = {
         items: cartItems.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
         deliveryAddress: 'Customer address',
@@ -52,7 +82,8 @@ const PaymentPage = () => {
         restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
         pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location',
         deliveryInstructions: (localStorage.getItem('order_instructions') || '').trim(),
-        discount
+        discount,
+        customerLocation: loc || undefined
       };
       await ordersAPI.create(orderPayload);
     } catch (e) {
@@ -203,6 +234,17 @@ const PaymentPage = () => {
         
         <div className="order-summary">
           <h2>Order Summary</h2>
+          <div className="input-group" style={{ marginBottom: 12 }}>
+            <label>Delivery Address</label>
+            <input
+              type="text"
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              placeholder="Enter your delivery address (Vadodara)"
+            />
+            {geoError && <small style={{ color: '#ff6b6b' }}>{geoError}</small>}
+            {geoLoading && <small>Geocoding address…</small>}
+          </div>
           {cartItems.map((item, index) => (
             <div key={index} className="order-item">
               <span>{item.name} x{item.quantity}</span>

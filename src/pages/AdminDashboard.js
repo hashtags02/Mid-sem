@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
 	const total = orders.length;
 	const totalPending = orders.filter(o => o.status === 'pending' || o.status === 'pending_delivery').length;
-	const totalAccepted = orders.filter(o => o.status === 'accepted' || o.status === 'accepted_delivery').length;
+	const totalAccepted = orders.filter(o => o.status === 'accepted' || o.status === 'confirmed' || o.status === 'accepted_delivery').length;
 	const totalReady = orders.filter(o => o.status === 'ready_for_pickup').length;
 	const totalAssigned = orders.filter(o => o.status === 'out_for_delivery').length;
 	const totalDelivered = orders.filter(o => o.status === 'delivered').length;
@@ -70,8 +70,8 @@ export default function AdminDashboard() {
 	};
 
 	const statusBadge = (s) => (
-		<span className={`badge ${s==='pending' || s==='pending_delivery' ? 'b-pending' : s==='confirmed' ? 'b-confirmed' : s==='accepted_delivery' ? 'b-confirmed' : s==='out_for_delivery' ? 'b-assigned' : s==='delivered' ? 'b-delivered' : 'b-cancelled'}`}>{
-			s==='pending_delivery' ? 'Pending Delivery' : s==='accepted_delivery' ? 'Accepted by Delivery' : s==='pending' ? 'Placed' : s==='confirmed' ? 'Accepted' : s==='out_for_delivery' ? 'Assigned' : s==='delivered' ? 'Delivered' : 'Cancelled'
+		<span className={`badge ${s==='pending' || s==='pending_delivery' ? 'b-pending' : s==='accepted' || s==='confirmed' || s==='accepted_delivery' ? 'b-confirmed' : s==='ready_for_pickup' ? 'b-ready' : s==='out_for_delivery' ? 'b-assigned' : s==='delivered' ? 'b-delivered' : 'b-cancelled'}`}>{
+			s==='pending_delivery' ? 'Pending Delivery' : s==='accepted_delivery' ? 'Accepted by Delivery' : s==='pending' ? 'Placed' : (s==='accepted' || s==='confirmed') ? 'Accepted' : s==='ready_for_pickup' ? 'Ready for Pickup' : s==='out_for_delivery' ? 'Assigned' : s==='delivered' ? 'Delivered' : 'Cancelled'
 		}</span>
 	);
 
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
 						<option value="all">All</option>
 						<option value="pending_delivery">Pending Delivery</option>
 						<option value="pending">Placed</option>
-						<option value="confirmed">Accepted by Restaurant</option>
+						<option value="accepted">Accepted by Restaurant</option>
 						<option value="accepted_delivery">Accepted by Delivery</option>
 						<option value="out_for_delivery">Assigned to Delivery</option>
 						<option value="delivered">Completed</option>

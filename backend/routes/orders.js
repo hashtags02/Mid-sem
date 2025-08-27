@@ -219,7 +219,7 @@ router.put('/:id/status', [
 router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({ status: { $in: ['pending_delivery'] } }).sort({ createdAt: -1 }).lean();
+      const docs = await Order.find({ status: { $in: ['pending_delivery', 'ready_for_pickup'] } }).sort({ createdAt: -1 }).lean();
       const mapped = docs.map(doc => ({
         id: doc.orderId,
         restaurantId: doc.restaurantId,

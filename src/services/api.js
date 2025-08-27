@@ -191,6 +191,7 @@ export const ordersAPI = {
   getAvailable: () => apiRequest('/orders/available/list'),
   assign: (id) => apiRequest(`/orders/${id}/assign`, { method: 'POST' }),
   acceptByRestaurant: (id) => apiRequest(`/orders/${id}/accept-restaurant`, { method: 'POST' }),
+  markReadyForPickup: (id) => apiRequest(`/orders/${id}/ready-for-pickup`, { method: 'POST' }),
   rejectByRestaurant: (id) => apiRequest(`/orders/${id}/reject-restaurant`, { method: 'POST' }),
   reassignDriver: (id, driver) => apiRequest(`/orders/${id}/reassign-driver`, {
     method: 'POST',

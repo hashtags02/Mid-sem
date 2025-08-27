@@ -2,31 +2,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import './DeliveryDashboard.css';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
+import { ordersAPI } from '../services/api';
 
-const initialAvailable = [
-	{
-		id: 'ORD-1005',
-		restaurantName: 'Spice Garden',
-		pickupAddress: '789 Spice Lane, Mumbai',
-		dropAddress: '12 Park View, Andheri West, Mumbai',
-		customerName: 'Karan Mehta',
-		customerPhone: '+91 98765 11111',
-		paymentType: 'COD',
-		payoutAmount: 45,
-		status: 'Available'
-	},
-	{
-		id: 'ORD-1006',
-		restaurantName: 'Burger House',
-		pickupAddress: '654 Burger Street, Mumbai',
-		dropAddress: '77 Lake Road, Powai, Mumbai',
-		customerName: 'Ritu Jain',
-		customerPhone: '+91 98765 22222',
-		paymentType: 'Paid Online',
-		payoutAmount: 52,
-		status: 'Available'
-	}
-];
+const initialAvailable = [];
 
 export default function DeliveryDashboard() {
 	const { user, updateUser } = useAuth();
@@ -60,12 +38,17 @@ export default function DeliveryDashboard() {
 
 	const weeklyEarnings = dailyEarnings; // For demo purposes, same as daily
 
-	const acceptOrder = (orderId) => {
+	const acceptOrder = async (orderId) => {
 		if (!isOnline || activeOrder) return;
 		const order = availableOrders.find(o => o.id === orderId);
 		if (!order) return;
-		setActiveOrder({ ...order, status: 'Assigned' });
-		setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+		try {
+			const assigned = await ordersAPI.assign(orderId);
+			setActiveOrder({ ...assigned, status: 'Assigned' });
+			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+		} catch (e) {
+			console.error('Failed to accept order', e);
+		}
 	};
 
 	const updateActiveStatus = (newStatus) => {
@@ -112,6 +95,21 @@ export default function DeliveryDashboard() {
 			setSaving(false);
 		}
 	};
+
+	useEffect(() => {
+		let mounted = true;
+		const load = async () => {
+			try {
+				const list = await ordersAPI.getAvailable();
+				if (mounted) setAvailableOrders(list);
+			} catch (e) {
+				// ignore in demo mode
+			}
+		};
+		load();
+		const id = setInterval(load, 10000);
+		return () => { mounted = false; clearInterval(id); };
+	}, []);
 
 	return (
 		<div className="dd-container">

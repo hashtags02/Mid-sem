@@ -188,6 +188,8 @@ export const ordersAPI = {
     method: 'PUT',
     body: JSON.stringify({ status }),
   }),
+  getAvailable: () => apiRequest('/orders/available/list'),
+  assign: (id) => apiRequest(`/orders/${id}/assign`, { method: 'POST' }),
 };
 
 export default {

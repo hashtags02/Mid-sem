@@ -51,12 +51,22 @@ export default function DeliveryDashboard() {
 		}
 	};
 
-	const updateActiveStatus = (newStatus) => {
+	const updateActiveStatus = async (newStatus) => {
 		if (!activeOrder) return;
-		setActiveOrder(prev => ({ ...prev, status: newStatus }));
-		if (newStatus === 'Delivered') {
-			setCompletedOrders(prev => [{ ...activeOrder, status: 'Delivered' }, ...prev]);
-			setActiveOrder(null);
+		try {
+			if (newStatus === 'Picked Up') {
+				// Backend status remains out_for_delivery once assigned
+				setActiveOrder(prev => ({ ...prev, status: 'Picked Up' }));
+				return;
+			}
+			if (newStatus === 'Delivered') {
+				await ordersAPI.updateStatus(activeOrder.id, 'delivered');
+				setActiveOrder(prev => ({ ...prev, status: 'Delivered' }));
+				setCompletedOrders(prev => [{ ...activeOrder, status: 'Delivered' }, ...prev]);
+				setActiveOrder(null);
+			}
+		} catch (e) {
+			console.error('Failed to update status', e);
 		}
 	};
 

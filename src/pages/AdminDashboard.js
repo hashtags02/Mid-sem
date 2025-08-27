@@ -42,6 +42,7 @@ export default function AdminDashboard() {
 		ev.addEventListener('order_confirmed', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_assigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_reassigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
+		ev.addEventListener('order_ready', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		return () => ev.close();
 	}, []);
 
@@ -67,8 +68,8 @@ export default function AdminDashboard() {
 	};
 
 	const statusBadge = (s) => (
-		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
-			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
+		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='ready_for_pickup'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
+			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='ready_for_pickup'?'Ready':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
 		}</span>
 	);
 
@@ -81,6 +82,7 @@ export default function AdminDashboard() {
 						<option value="all">All</option>
 						<option value="pending">Placed</option>
 						<option value="confirmed">Accepted by Restaurant</option>
+						<option value="ready_for_pickup">Ready for Pickup</option>
 						<option value="out_for_delivery">Assigned to Delivery</option>
 						<option value="delivered">Completed</option>
 						<option value="cancelled">Cancelled</option>

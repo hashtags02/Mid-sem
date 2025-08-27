@@ -114,10 +114,10 @@ export default function DeliveryDashboard() {
 				if ((!Array.isArray(list) || list.length === 0)) {
 					try {
 						const all = await ordersAPI.getAll();
-						list = (all || []).filter(o => ['pending','confirmed','preparing'].includes(o.status));
+						list = (all || []).filter(o => ['ready_for_pickup'].includes(o.status));
 					} catch (_) {}
 				}
-				if (mounted) setAvailableOrders(list || []);
+				if (mounted) setAvailableOrders((list || []).filter(o => o.status === 'ready_for_pickup'));
 			} catch (e) {
 				if (mounted) setAvailableOrders([]);
 			}
@@ -128,6 +128,7 @@ export default function DeliveryDashboard() {
 		const refresh = () => load();
 		ev.addEventListener('order_created', refresh);
 		ev.addEventListener('order_confirmed', refresh);
+		ev.addEventListener('order_ready', refresh);
 		ev.addEventListener('order_updated', refresh);
 		ev.addEventListener('order_assigned', refresh);
 		return () => { mounted = false; clearInterval(id); ev.close(); };

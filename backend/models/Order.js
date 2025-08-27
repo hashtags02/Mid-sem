@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema({
   deliveryInstructions: { type: String },
   paymentMethod: { type: String, enum: ['cash', 'card', 'upi', 'wallet'] },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
-  status: { type: String, enum: ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'cancelled'], default: 'pending' },
   payoutAmount: { type: Number },
   driver: { type: mongoose.Schema.Types.Mixed },
 }, { timestamps: true });

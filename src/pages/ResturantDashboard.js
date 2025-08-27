@@ -32,7 +32,13 @@ const ResturantDashboard = () => {
 
 	const acceptOrder = async (id) => {
 		try {
-			await ordersAPI.updateStatus(id, 'confirmed');
+			await ordersAPI.acceptByRestaurant(id);
+		} catch (_) {}
+	};
+
+	const markReady = async (id) => {
+		try {
+			await ordersAPI.markReady(id);
 		} catch (_) {}
 	};
 
@@ -57,7 +63,9 @@ const ResturantDashboard = () => {
 		const onUpdated = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				const mapped = order.status === 'out_for_delivery'
+				const mapped = order.status === 'ready_for_pickup'
+					? 'Ready for Pickup'
+					: order.status === 'out_for_delivery'
 					? 'Picked Up'
 					: (order.status === 'delivered' ? 'Delivered' : 'Pending');
 				updateStatusLocal(order.id, mapped);
@@ -67,18 +75,27 @@ const ResturantDashboard = () => {
 		const onConfirmed = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				updateStatusLocal(order.id, 'Picked Up');
+				updateStatusLocal(order.id, 'Accepted');
+			} catch (_) {}
+		};
+
+		const onReady = (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				updateStatusLocal(order.id, 'Ready for Pickup');
 			} catch (_) {}
 		};
 
 		ev.addEventListener('order_created', onCreated);
 		ev.addEventListener('order_updated', onUpdated);
 		ev.addEventListener('order_confirmed', onConfirmed);
+		ev.addEventListener('order_ready', onReady);
 
 		return () => {
 			ev.removeEventListener('order_created', onCreated);
 			ev.removeEventListener('order_updated', onUpdated);
 			ev.removeEventListener('order_confirmed', onConfirmed);
+			ev.removeEventListener('order_ready', onReady);
 			ev.close();
 		};
 	}, []);
@@ -176,18 +193,20 @@ const ResturantDashboard = () => {
 														Accept
 													</button>
 													<button
-														onClick={() => updateStatusLocal(o.id, 'Delivered')}
+														onClick={() => markReady(o.id)}
 														style={{
 															padding: '8px 10px',
 															borderRadius: 10,
 															border: 'none',
 															fontWeight: 700,
-															background: '#16a34a',
+															background: '#f59e0b',
 															color: '#fff',
-															cursor: 'pointer'
+															cursor: 'pointer',
+															opacity: o.status === 'Accepted' ? 1 : 0.5
 														}}
+														disabled={o.status !== 'Accepted'}
 													>
-														Delivered
+														Mark Ready
 													</button>
 												</div>
 											</td>

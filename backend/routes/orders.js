@@ -5,9 +5,7 @@ const { auth, optionalAuth } = require('../middleware/auth');
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 
-// Temporary in-memory store for orders until DB model is ready
-// Note: This is process-local and resets on server restart
-const inMemoryOrders = new Map();
+// Legacy in-memory store removed in favor of mandatory DB persistence
 let nextOrderNumericId = 1010;
 
 const generateOrderId = () => {
@@ -60,27 +58,26 @@ router.get('/events', optionalAuth, (req, res) => {
 // @access  Optional (dev-friendly)
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({}).sort({ createdAt: -1 }).lean();
-      const mapped = docs.map(doc => ({
-        id: doc.orderId,
-        restaurantId: doc.restaurantId,
-        restaurantName: doc.restaurantName,
-        items: doc.items,
-        totalAmount: doc.totalAmount,
-        deliveryAddress: doc.deliveryAddress,
-        paymentMethod: doc.paymentMethod,
-        status: doc.status,
-        payoutAmount: doc.payoutAmount,
-        createdAt: doc.createdAt,
-        pickupAddress: doc.deliveryAddress?.pickupAddress || 'Restaurant Address',
-        dropAddress: typeof doc.deliveryAddress === 'string' ? doc.deliveryAddress : [doc.deliveryAddress?.street, doc.deliveryAddress?.city].filter(Boolean).join(', '),
-        paymentType: doc.paymentMethod === 'cash' ? 'COD' : 'Paid Online',
-      }));
-      return res.json(mapped);
+    if (!(mongoose.connection && mongoose.connection.readyState === 1)) {
+      return res.status(503).json({ error: 'Database not connected' });
     }
-    const orders = Array.from(inMemoryOrders.values());
-    return res.json(orders);
+    const docs = await Order.find({}).sort({ createdAt: -1 }).lean();
+    const mapped = docs.map(doc => ({
+      id: doc.orderId,
+      restaurantId: doc.restaurantId,
+      restaurantName: doc.restaurantName,
+      items: doc.items,
+      totalAmount: doc.totalAmount,
+      deliveryAddress: doc.deliveryAddress,
+      paymentMethod: doc.paymentMethod,
+      status: doc.status,
+      payoutAmount: doc.payoutAmount,
+      createdAt: doc.createdAt,
+      pickupAddress: doc.deliveryAddress?.pickupAddress || 'Restaurant Address',
+      dropAddress: typeof doc.deliveryAddress === 'string' ? doc.deliveryAddress : [doc.deliveryAddress?.street, doc.deliveryAddress?.city].filter(Boolean).join(', '),
+      paymentType: doc.paymentMethod === 'cash' ? 'COD' : 'Paid Online',
+    }));
+    return res.json(mapped);
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Server error' });
@@ -107,63 +104,41 @@ router.post('/', [
     const calcPayout = Math.max(30, Math.round(items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0) * 0.1));
     const calcTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const orderId = generateOrderId();
-      const doc = await Order.create({
-        orderId,
-        user: req.user?._id || req.user?.id || undefined,
-        restaurantId: restaurantId || undefined,
-        restaurantName: req.body.restaurantName || 'Restaurant',
-        items,
-        totalAmount: calcTotal,
-        deliveryAddress,
-        deliveryInstructions: deliveryInstructions || '',
-        paymentMethod,
-        paymentStatus: paymentStatus || 'pending',
-        status: (paymentStatus === 'paid') ? 'pending_delivery' : 'pending',
-        payoutAmount: calcPayout,
-      });
-      const response = {
-        id: doc.orderId,
-        restaurantId: doc.restaurantId,
-        restaurantName: doc.restaurantName,
-        items: doc.items,
-        totalAmount: doc.totalAmount,
-        deliveryAddress: doc.deliveryAddress,
-        paymentMethod: doc.paymentMethod,
-        status: doc.status,
-        payoutAmount: doc.payoutAmount,
-        createdAt: doc.createdAt,
-        pickupAddress: req.body.pickupAddress || 'Restaurant Address',
-        dropAddress: typeof deliveryAddress === 'string' ? deliveryAddress : [deliveryAddress?.street, deliveryAddress?.city].filter(Boolean).join(', '),
-        paymentType: paymentMethod === 'cash' ? 'COD' : 'Paid Online'
-      };
-      broadcastOrderEvent('order_created', response);
-      return res.status(201).json(response);
+    if (!(mongoose.connection && mongoose.connection.readyState === 1)) {
+      return res.status(503).json({ error: 'Database not connected' });
     }
-
-    const newOrder = {
-      id: generateOrderId(),
-      userId: req.user?._id || req.user?.id || null,
-      restaurantId: restaurantId || null,
-      customerName: customerName || req.user?.name || 'Customer',
-      customerPhone: customerPhone || req.user?.phone || 'N/A',
+    const orderId = generateOrderId();
+    const doc = await Order.create({
+      orderId,
+      user: req.user?._id || req.user?.id || undefined,
+      restaurantId: restaurantId || undefined,
+      restaurantName: req.body.restaurantName || 'Restaurant',
       items,
       totalAmount: calcTotal,
       deliveryAddress,
       deliveryInstructions: deliveryInstructions || '',
       paymentMethod,
-      createdAt: new Date().toISOString(),
+      paymentStatus: paymentStatus || 'pending',
       status: (paymentStatus === 'paid') ? 'pending_delivery' : 'pending',
       payoutAmount: calcPayout,
-      restaurantName: req.body.restaurantName || 'Restaurant',
+    });
+    const response = {
+      id: doc.orderId,
+      restaurantId: doc.restaurantId,
+      restaurantName: doc.restaurantName,
+      items: doc.items,
+      totalAmount: doc.totalAmount,
+      deliveryAddress: doc.deliveryAddress,
+      paymentMethod: doc.paymentMethod,
+      status: doc.status,
+      payoutAmount: doc.payoutAmount,
+      createdAt: doc.createdAt,
       pickupAddress: req.body.pickupAddress || 'Restaurant Address',
       dropAddress: typeof deliveryAddress === 'string' ? deliveryAddress : [deliveryAddress?.street, deliveryAddress?.city].filter(Boolean).join(', '),
       paymentType: paymentMethod === 'cash' ? 'COD' : 'Paid Online'
     };
-    inMemoryOrders.set(newOrder.id, newOrder);
-    broadcastOrderEvent('order_created', newOrder);
-    return res.status(201).json(newOrder);
+    broadcastOrderEvent('order_created', response);
+    return res.status(201).json(response);
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ error: 'Server error' });
@@ -175,26 +150,24 @@ router.post('/', [
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const doc = await Order.findOne({ orderId: req.params.id }).lean();
-      if (!doc) return res.status(404).json({ error: 'Order not found' });
-      const response = {
-        id: doc.orderId,
-        restaurantId: doc.restaurantId,
-        restaurantName: doc.restaurantName,
-        items: doc.items,
-        totalAmount: doc.totalAmount,
-        deliveryAddress: doc.deliveryAddress,
-        paymentMethod: doc.paymentMethod,
-        status: doc.status,
-        payoutAmount: doc.payoutAmount,
-        createdAt: doc.createdAt,
-      };
-      return res.json(response);
+    if (!(mongoose.connection && mongoose.connection.readyState === 1)) {
+      return res.status(503).json({ error: 'Database not connected' });
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    return res.json(order);
+    const doc = await Order.findOne({ orderId: req.params.id }).lean();
+    if (!doc) return res.status(404).json({ error: 'Order not found' });
+    const response = {
+      id: doc.orderId,
+      restaurantId: doc.restaurantId,
+      restaurantName: doc.restaurantName,
+      items: doc.items,
+      totalAmount: doc.totalAmount,
+      deliveryAddress: doc.deliveryAddress,
+      paymentMethod: doc.paymentMethod,
+      status: doc.status,
+      payoutAmount: doc.payoutAmount,
+      createdAt: doc.createdAt,
+    };
+    return res.json(response);
   } catch (error) {
     console.error('Error fetching order:', error);
     res.status(500).json({ error: 'Server error' });
@@ -234,12 +207,7 @@ router.put('/:id/status', [
       broadcastOrderEvent('order_updated', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    order.status = req.body.status;
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_updated', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error updating order status:', error);
     res.status(500).json({ error: 'Server error' });
@@ -268,8 +236,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
       }));
       return res.json(mapped);
     }
-    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending_delivery'].includes(o.status));
-    return res.json(available);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error fetching available orders:', error);
     res.status(500).json({ error: 'Server error' });
@@ -305,16 +272,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
       broadcastOrderEvent('order_assigned', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending_delivery'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order is not available for assignment' });
-    }
-    order.status = 'out_for_delivery';
-    order.driver = { id: req.user?._id || req.user?.id, name: req.user?.name || 'Driver' };
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_assigned', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error assigning order:', error);
     res.status(500).json({ error: 'Server error' });
@@ -346,15 +304,7 @@ router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
       broadcastOrderEvent('order_accepted', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order cannot be accepted' });
-    }
-    order.status = 'accepted';
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_accepted', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error confirming order:', error);
     res.status(500).json({ error: 'Server error' });
@@ -386,15 +336,7 @@ router.post('/:id/ready-for-pickup', optionalAuth, async (req, res) => {
       broadcastOrderEvent('order_ready_for_pickup', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['accepted'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order must be accepted before marking as ready for pickup' });
-    }
-    order.status = 'ready_for_pickup';
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_ready_for_pickup', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error marking order ready for pickup:', error);
     res.status(500).json({ error: 'Server error' });
@@ -426,15 +368,7 @@ router.post('/:id/reject-restaurant', optionalAuth, async (req, res) => {
       broadcastOrderEvent('order_rejected', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'accepted'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order cannot be rejected' });
-    }
-    order.status = 'cancelled';
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_rejected', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error rejecting order:', error);
     res.status(500).json({ error: 'Server error' });
@@ -467,13 +401,7 @@ router.post('/:id/reassign-driver', auth, async (req, res) => {
       broadcastOrderEvent('order_reassigned', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    order.driver = { id: driverId || 'admin-reassign', name: driverName || 'Reassigned Driver' };
-    order.status = 'out_for_delivery';
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_reassigned', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error reassigning driver:', error);
     res.status(500).json({ error: 'Server error' });
@@ -505,15 +433,7 @@ router.post('/:id/mark-ready', optionalAuth, async (req, res) => {
       broadcastOrderEvent('order_ready', response);
       return res.json(response);
     }
-    const order = inMemoryOrders.get(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order cannot be marked ready' });
-    }
-    order.status = 'ready_for_pickup';
-    inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_ready', order);
-    return res.json(order);
+    return res.status(503).json({ error: 'Database not connected' });
   } catch (error) {
     console.error('Error marking order ready:', error);
     res.status(500).json({ error: 'Server error' });

@@ -4,6 +4,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { CartContext } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import "./PaymentPage.css"; // Reusing the same styles
+import { ordersAPI } from "../services/api";
 
 const SplitUpiCollectionPage = () => {
   const { 
@@ -73,12 +74,28 @@ const SplitUpiCollectionPage = () => {
     }
 
     setIsProcessing(true);
-    
+
     // Simulate processing payments for all members
-    setTimeout(() => {
+    setTimeout(async () => {
+      try {
+        // Create a single backend order after all split payments succeed
+        const orderPayload = {
+          items: cartItems.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+          deliveryAddress: 'Customer address',
+          paymentMethod: 'upi',
+          paymentStatus: 'paid',
+          restaurantId: cartItems[0]?.restaurantId || 'demo-restaurant',
+          restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
+          pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location'
+        };
+        await ordersAPI.create(orderPayload);
+      } catch (_) {
+        // Non-blocking for UI success flow
+      }
+
       setIsProcessing(false);
       setShowSuccess(true);
-      
+
       // Clear cart after successful payment
       setTimeout(() => {
         clearCart();

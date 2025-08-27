@@ -53,6 +53,10 @@ export default function AdminDashboard() {
 	const totalAssigned = orders.filter(o => o.status === 'out_for_delivery').length;
 	const totalDelivered = orders.filter(o => o.status === 'delivered').length;
 	const totalCancelled = orders.filter(o => o.status === 'cancelled').length;
+	const todayIso = new Date().toISOString().slice(0,10);
+	const earningsToday = orders
+		.filter(o => o.status === 'delivered' && (o.createdAt ? String(o.createdAt).slice(0,10) === todayIso : true))
+		.reduce((sum, o) => sum + (Number(o.payoutAmount) || 0), 0);
 
 	const confirm = async (id) => { await ordersAPI.updateStatus(id, 'confirmed'); };
 	const cancel = async (id) => { await ordersAPI.updateStatus(id, 'cancelled'); };
@@ -91,6 +95,7 @@ export default function AdminDashboard() {
 				<div className="kpi-card"><div className="kpi-title">Assigned</div><div className="kpi-value">{totalAssigned}</div></div>
 				<div className="kpi-card"><div className="kpi-title">Delivered</div><div className="kpi-value">{totalDelivered}</div></div>
 				<div className="kpi-card"><div className="kpi-title">Cancelled</div><div className="kpi-value">{totalCancelled}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Earnings Today (₹)</div><div className="kpi-value">{earningsToday}</div></div>
 			</div>
 
 			<div className="admin-card">

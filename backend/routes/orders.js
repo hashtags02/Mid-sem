@@ -67,6 +67,7 @@ router.get('/', auth, async (req, res) => {
         paymentMethod: doc.paymentMethod,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
         pickupAddress: doc.deliveryAddress?.pickupAddress || 'Restaurant Address',
         dropAddress: typeof doc.deliveryAddress === 'string' ? doc.deliveryAddress : [doc.deliveryAddress?.street, doc.deliveryAddress?.city].filter(Boolean).join(', '),
         paymentType: doc.paymentMethod === 'cash' ? 'COD' : 'Paid Online',
@@ -123,6 +124,7 @@ router.post('/', [
         paymentMethod: doc.paymentMethod,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
         pickupAddress: req.body.pickupAddress || 'Restaurant Address',
         dropAddress: typeof deliveryAddress === 'string' ? deliveryAddress : [deliveryAddress?.street, deliveryAddress?.city].filter(Boolean).join(', '),
         paymentType: paymentMethod === 'cash' ? 'COD' : 'Paid Online'
@@ -175,6 +177,7 @@ router.get('/:id', auth, async (req, res) => {
         paymentMethod: doc.paymentMethod,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
       };
       return res.json(response);
     }
@@ -246,6 +249,7 @@ router.get('/available/list', auth, async (req, res) => {
         deliveryAddress: doc.deliveryAddress,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
         pickupAddress: 'Restaurant Address',
         dropAddress: typeof doc.deliveryAddress === 'string' ? doc.deliveryAddress : [doc.deliveryAddress?.street, doc.deliveryAddress?.city].filter(Boolean).join(', '),
         paymentType: doc.paymentMethod === 'cash' ? 'COD' : 'Paid Online',
@@ -283,6 +287,7 @@ router.post('/:id/assign', auth, async (req, res) => {
         paymentMethod: updated.paymentMethod,
         status: updated.status,
         payoutAmount: updated.payoutAmount,
+        createdAt: updated.createdAt,
       };
       broadcastOrderEvent('order_assigned', response);
       return res.json(response);
@@ -322,6 +327,7 @@ router.post('/:id/accept-restaurant', auth, async (req, res) => {
         paymentMethod: doc.paymentMethod,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
       };
       broadcastOrderEvent('order_confirmed', response);
       return res.json(response);
@@ -360,6 +366,7 @@ router.post('/:id/reject-restaurant', auth, async (req, res) => {
         paymentMethod: doc.paymentMethod,
         status: doc.status,
         payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
       };
       broadcastOrderEvent('order_rejected', response);
       return res.json(response);

@@ -100,10 +100,16 @@ export default function DeliveryDashboard() {
 		let mounted = true;
 		const load = async () => {
 			try {
-				const list = await ordersAPI.getAvailable();
-				if (mounted) setAvailableOrders(list);
+				let list = await ordersAPI.getAvailable();
+				if ((!Array.isArray(list) || list.length === 0)) {
+					try {
+						const all = await ordersAPI.getAll();
+						list = (all || []).filter(o => ['pending','confirmed','preparing'].includes(o.status));
+					} catch (_) {}
+				}
+				if (mounted) setAvailableOrders(list || []);
 			} catch (e) {
-				// ignore in demo mode
+				if (mounted) setAvailableOrders([]);
 			}
 		};
 		load();

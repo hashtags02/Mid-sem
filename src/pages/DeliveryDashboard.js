@@ -44,7 +44,7 @@ export default function DeliveryDashboard() {
 		if (!order) return;
 		try {
 			const assigned = await ordersAPI.assign(orderId);
-			setActiveOrder({ ...assigned, status: 'Assigned' });
+			setActiveOrder({ ...assigned, status: 'Out for Delivery' });
 			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
 		} catch (e) {
 			console.error('Failed to accept order', e);
@@ -55,7 +55,7 @@ export default function DeliveryDashboard() {
 		if (!activeOrder) return;
 		try {
 			if (newStatus === 'Picked Up') {
-				// Backend status remains out_for_delivery once assigned
+				// This is just a local UI status change - order is still out_for_delivery in backend
 				setActiveOrder(prev => ({ ...prev, status: 'Picked Up' }));
 				return;
 			}
@@ -114,7 +114,7 @@ export default function DeliveryDashboard() {
 				if ((!Array.isArray(list) || list.length === 0)) {
 					try {
 						const all = await ordersAPI.getAll();
-						list = (all || []).filter(o => ['pending','confirmed','preparing'].includes(o.status));
+						list = (all || []).filter(o => ['accepted','ready_for_pickup'].includes(o.status));
 					} catch (_) {}
 				}
 				if (mounted) setAvailableOrders(list || []);
@@ -127,7 +127,8 @@ export default function DeliveryDashboard() {
 		const ev = new EventSource((process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api') + '/orders/events');
 		const refresh = () => load();
 		ev.addEventListener('order_created', refresh);
-		ev.addEventListener('order_confirmed', refresh);
+		ev.addEventListener('order_accepted', refresh);
+		ev.addEventListener('order_ready_for_pickup', refresh);
 		ev.addEventListener('order_updated', refresh);
 		ev.addEventListener('order_assigned', refresh);
 		return () => { mounted = false; clearInterval(id); ev.close(); };
@@ -249,7 +250,7 @@ export default function DeliveryDashboard() {
 								<button
 									className="dd-btn dd-btn-pick"
 									onClick={() => updateActiveStatus('Picked Up')}
-									disabled={activeOrder.status !== 'Assigned'}
+									disabled={activeOrder.status !== 'Out for Delivery'}
 								>
 									Picked Up
 								</button>

@@ -98,7 +98,7 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { items, deliveryAddress, paymentMethod, deliveryInstructions, restaurantId, customerName, customerPhone } = req.body;
+    const { items, deliveryAddress, paymentMethod, paymentStatus, deliveryInstructions, restaurantId, customerName, customerPhone } = req.body;
 
     const calcPayout = Math.max(30, Math.round(items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0) * 0.1));
     const calcTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
@@ -115,6 +115,7 @@ router.post('/', [
         deliveryAddress,
         deliveryInstructions: deliveryInstructions || '',
         paymentMethod,
+        paymentStatus: paymentStatus || 'pending',
         status: 'pending',
         payoutAmount: calcPayout,
       });
@@ -201,7 +202,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id/status', [
   auth,
-  body('status').isIn(['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])
+  body('status').isIn(['pending', 'accepted', 'ready_for_pickup', 'out_for_delivery', 'delivered', 'cancelled'])
     .withMessage('Invalid order status')
 ], async (req, res) => {
   try {
@@ -242,11 +243,11 @@ router.put('/:id/status', [
 });
 
 // Delivery-side helper endpoints
-// List orders available for pickup (pending/confirmed/preparing but not assigned)
+// List orders available for pickup (accepted/ready_for_pickup but not assigned)
 router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing'] } }).sort({ createdAt: -1 }).lean();
+      const docs = await Order.find({ status: { $in: ['accepted', 'ready_for_pickup'] } }).sort({ createdAt: -1 }).lean();
       const mapped = docs.map(doc => ({
         id: doc.orderId,
         restaurantId: doc.restaurantId,
@@ -263,7 +264,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
       }));
       return res.json(mapped);
     }
-    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status));
+    const available = Array.from(inMemoryOrders.values()).filter(o => ['accepted', 'ready_for_pickup'].includes(o.status));
     return res.json(available);
   } catch (error) {
     console.error('Error fetching available orders:', error);
@@ -277,8 +278,8 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOne({ orderId: req.params.id }).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });
-      if (!['pending', 'confirmed', 'preparing'].includes(doc.status)) {
-        return res.status(400).json({ error: 'Order is not available for assignment' });
+      if (!['ready_for_pickup'].includes(doc.status)) {
+        return res.status(400).json({ error: 'Order is not available for assignment. It must be ready for pickup.' });
       }
       const updated = await Order.findOneAndUpdate(
         { orderId: req.params.id },
@@ -302,8 +303,8 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     }
     const order = inMemoryOrders.get(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
-      return res.status(400).json({ error: 'Order is not available for assignment' });
+    if (!['ready_for_pickup'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order is not available for assignment. It must be ready for pickup.' });
     }
     order.status = 'out_for_delivery';
     order.driver = { id: req.user?._id || req.user?.id, name: req.user?.name || 'Driver' };
@@ -316,13 +317,13 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
   }
 });
 
-// Restaurant accepts order (confirm)
+// Restaurant accepts order
 router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOneAndUpdate(
         { orderId: req.params.id },
-        { $set: { status: 'confirmed' } },
+        { $set: { status: 'accepted' } },
         { new: true }
       ).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });
@@ -338,7 +339,7 @@ router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
         payoutAmount: doc.payoutAmount,
         createdAt: doc.createdAt,
       };
-      broadcastOrderEvent('order_confirmed', response);
+      broadcastOrderEvent('order_accepted', response);
       return res.json(response);
     }
     const order = inMemoryOrders.get(req.params.id);
@@ -346,12 +347,52 @@ router.post('/:id/accept-restaurant', optionalAuth, async (req, res) => {
     if (!['pending'].includes(order.status)) {
       return res.status(400).json({ error: 'Order cannot be accepted' });
     }
-    order.status = 'confirmed';
+    order.status = 'accepted';
     inMemoryOrders.set(order.id, order);
-    broadcastOrderEvent('order_confirmed', order);
+    broadcastOrderEvent('order_accepted', order);
     return res.json(order);
   } catch (error) {
     console.error('Error confirming order:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Restaurant marks order as ready for pickup
+router.post('/:id/ready-for-pickup', optionalAuth, async (req, res) => {
+  try {
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const doc = await Order.findOneAndUpdate(
+        { orderId: req.params.id },
+        { $set: { status: 'ready_for_pickup' } },
+        { new: true }
+      ).lean();
+      if (!doc) return res.status(404).json({ error: 'Order not found' });
+      const response = {
+        id: doc.orderId,
+        restaurantId: doc.restaurantId,
+        restaurantName: doc.restaurantName,
+        items: doc.items,
+        totalAmount: doc.totalAmount,
+        deliveryAddress: doc.deliveryAddress,
+        paymentMethod: doc.paymentMethod,
+        status: doc.status,
+        payoutAmount: doc.payoutAmount,
+        createdAt: doc.createdAt,
+      };
+      broadcastOrderEvent('order_ready_for_pickup', response);
+      return res.json(response);
+    }
+    const order = inMemoryOrders.get(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (!['accepted'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order must be accepted before marking as ready for pickup' });
+    }
+    order.status = 'ready_for_pickup';
+    inMemoryOrders.set(order.id, order);
+    broadcastOrderEvent('order_ready_for_pickup', order);
+    return res.json(order);
+  } catch (error) {
+    console.error('Error marking order ready for pickup:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -383,7 +424,7 @@ router.post('/:id/reject-restaurant', optionalAuth, async (req, res) => {
     }
     const order = inMemoryOrders.get(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
+    if (!['pending', 'accepted'].includes(order.status)) {
       return res.status(400).json({ error: 'Order cannot be rejected' });
     }
     order.status = 'cancelled';

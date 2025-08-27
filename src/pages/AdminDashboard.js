@@ -39,9 +39,11 @@ export default function AdminDashboard() {
 		};
 		ev.addEventListener('order_created', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_updated', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
-		ev.addEventListener('order_confirmed', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
+		ev.addEventListener('order_accepted', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
+		ev.addEventListener('order_ready_for_pickup', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_assigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		ev.addEventListener('order_reassigned', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
+		ev.addEventListener('order_rejected', e => { try { upsert(JSON.parse(e.data)); } catch(_){} });
 		return () => ev.close();
 	}, []);
 
@@ -49,7 +51,8 @@ export default function AdminDashboard() {
 
 	const total = orders.length;
 	const totalPending = orders.filter(o => o.status === 'pending').length;
-	const totalConfirmed = orders.filter(o => o.status === 'confirmed').length;
+	const totalAccepted = orders.filter(o => o.status === 'accepted').length;
+	const totalReady = orders.filter(o => o.status === 'ready_for_pickup').length;
 	const totalAssigned = orders.filter(o => o.status === 'out_for_delivery').length;
 	const totalDelivered = orders.filter(o => o.status === 'delivered').length;
 	const totalCancelled = orders.filter(o => o.status === 'cancelled').length;
@@ -58,8 +61,9 @@ export default function AdminDashboard() {
 		.filter(o => o.status === 'delivered' && (o.createdAt ? String(o.createdAt).slice(0,10) === todayIso : true))
 		.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
 
-	const confirm = async (id) => { await ordersAPI.updateStatus(id, 'confirmed'); };
-	const cancel = async (id) => { await ordersAPI.updateStatus(id, 'cancelled'); };
+	const acceptOrder = async (id) => { await ordersAPI.acceptByRestaurant(id); };
+	const markReady = async (id) => { await ordersAPI.markReadyForPickup(id); };
+	const cancel = async (id) => { await ordersAPI.rejectByRestaurant(id); };
 	const markDelivered = async (id) => { await ordersAPI.updateStatus(id, 'delivered'); };
 	const reassign = async (id) => {
 		const name = prompt('Enter driver name');
@@ -67,8 +71,8 @@ export default function AdminDashboard() {
 	};
 
 	const statusBadge = (s) => (
-		<span className={`badge ${s==='pending'?'b-pending':s==='confirmed'?'b-confirmed':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
-			s==='pending'?'Placed':s==='confirmed'?'Accepted':s==='out_for_delivery'?'Assigned':s==='delivered'?'Delivered':'Cancelled'
+		<span className={`badge ${s==='pending'?'b-pending':s==='accepted'?'b-accepted':s==='ready_for_pickup'?'b-ready':s==='out_for_delivery'?'b-assigned':s==='delivered'?'b-delivered':'b-cancelled'}`}>{
+			s==='pending'?'Pending':s==='accepted'?'Accepted':s==='ready_for_pickup'?'Ready for Pickup':s==='out_for_delivery'?'Out for Delivery':s==='delivered'?'Delivered':'Cancelled'
 		}</span>
 	);
 
@@ -79,10 +83,11 @@ export default function AdminDashboard() {
 				<div className="admin-filters">
 					<select value={filter} onChange={e => setFilter(e.target.value)}>
 						<option value="all">All</option>
-						<option value="pending">Placed</option>
-						<option value="confirmed">Accepted by Restaurant</option>
-						<option value="out_for_delivery">Assigned to Delivery</option>
-						<option value="delivered">Completed</option>
+						<option value="pending">Pending</option>
+						<option value="accepted">Accepted by Restaurant</option>
+						<option value="ready_for_pickup">Ready for Pickup</option>
+						<option value="out_for_delivery">Out for Delivery</option>
+						<option value="delivered">Delivered</option>
 						<option value="cancelled">Cancelled</option>
 					</select>
 				</div>
@@ -90,9 +95,10 @@ export default function AdminDashboard() {
 
 			<div className="admin-kpis">
 				<div className="kpi-card"><div className="kpi-title">Total Orders</div><div className="kpi-value">{total}</div></div>
-				<div className="kpi-card"><div className="kpi-title">Placed</div><div className="kpi-value">{totalPending}</div></div>
-				<div className="kpi-card"><div className="kpi-title">Accepted</div><div className="kpi-value">{totalConfirmed}</div></div>
-				<div className="kpi-card"><div className="kpi-title">Assigned</div><div className="kpi-value">{totalAssigned}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Pending</div><div className="kpi-value">{totalPending}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Accepted</div><div className="kpi-value">{totalAccepted}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Ready</div><div className="kpi-value">{totalReady}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Out for Delivery</div><div className="kpi-value">{totalAssigned}</div></div>
 				<div className="kpi-card"><div className="kpi-title">Delivered</div><div className="kpi-value">{totalDelivered}</div></div>
 				<div className="kpi-card"><div className="kpi-title">Cancelled</div><div className="kpi-value">{totalCancelled}</div></div>
 				<div className="kpi-card"><div className="kpi-title">Earnings Today (₹)</div><div className="kpi-value">{earningsToday}</div></div>
@@ -120,10 +126,24 @@ export default function AdminDashboard() {
 								<td className="admin-td">{statusBadge(o.status)}</td>
 								<td className="admin-td">
 									<div className="admin-actions">
-										<button className="btn btn-accept" onClick={() => confirm(o.id)} disabled={o.status !== 'pending'}>Accept</button>
-										<button className="btn btn-cancel" onClick={() => cancel(o.id)} disabled={o.status === 'delivered'}>Cancel</button>
-										<button className="btn btn-reassign" onClick={() => reassign(o.id)} disabled={o.status === 'delivered'}>Reassign</button>
-										<button className="btn btn-delivered" onClick={() => markDelivered(o.id)} disabled={o.status !== 'out_for_delivery'}>Mark Delivered</button>
+										{o.status === 'pending' && (
+											<>
+												<button className="btn btn-accept" onClick={() => acceptOrder(o.id)}>Accept</button>
+												<button className="btn btn-cancel" onClick={() => cancel(o.id)}>Reject</button>
+											</>
+										)}
+										{o.status === 'accepted' && (
+											<button className="btn btn-ready" onClick={() => markReady(o.id)}>Mark Ready</button>
+										)}
+										{o.status === 'out_for_delivery' && (
+											<>
+												<button className="btn btn-reassign" onClick={() => reassign(o.id)}>Reassign</button>
+												<button className="btn btn-delivered" onClick={() => markDelivered(o.id)}>Mark Delivered</button>
+											</>
+										)}
+										{['ready_for_pickup', 'delivered', 'cancelled'].includes(o.status) && (
+											<span style={{ color: '#6b7280', fontSize: '12px', fontStyle: 'italic' }}>No actions available</span>
+										)}
 									</div>
 								</td>
 							</tr>

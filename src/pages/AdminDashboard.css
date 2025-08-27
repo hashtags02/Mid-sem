@@ -13,14 +13,16 @@
 .admin-row:nth-child(even){background:rgba(255,255,255,.02)}
 .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:#0b1220;background:#ffb54c}
 .b-pending{background:#ffb54c}
-.b-confirmed{background:#ff9f3f}
-.b-assigned{background:#fb923c}
-.b-delivered{background:#86efac}
-.b-cancelled{background:#fecaca}
+.b-accepted{background:#8b5cf6}
+.b-ready{background:#10b981}
+.b-assigned{background:#3b82f6}
+.b-delivered{background:#16a34a}
+.b-cancelled{background:#ef4444}
 .admin-actions{display:flex;gap:6px;flex-wrap:wrap}
 .btn{padding:8px 10px;border:none;border-radius:10px;font-weight:800;cursor:pointer;color:#0b1220;background:#ffb54c}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-accept{background:#ff9f3f}
+.btn-accept{background:#10b981}
+.btn-ready{background:#3b82f6}
 .btn-cancel{background:#ef4444;color:#fff}
-.btn-reassign{background:#fb923c}
-.btn-delivered{background:#86efac}
+.btn-reassign{background:#f59e0b}
+.btn-delivered{background:#16a34a}

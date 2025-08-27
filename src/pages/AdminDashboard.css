@@ -1,1 +1,26 @@
-.admin-page{padding:24px;background:#f8fafc;min-height:100vh;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.admin-title{margin:0;font-size:22px;font-weight:800;color:#0f172a}.admin-filters{display:flex;gap:8px}.admin-card{background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.06);overflow:hidden}.admin-table{width:100%;border-collapse:separate;border-spacing:0}.admin-th,.admin-td{padding:12px 10px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:14px;color:#0f172a}.admin-th{background:#f1f5f9;font-weight:700}.admin-row:nth-child(even){background:#fafafa}.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}.b-pending{background:#f59e0b}.b-confirmed{background:#3b82f6}.b-assigned{background:#6366f1}.b-delivered{background:#16a34a}.b-cancelled{background:#ef4444}.admin-actions{display:flex;gap:6px;flex-wrap:wrap}.btn{padding:8px 10px;border:none;border-radius:10px;font-weight:700;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-accept{background:#3b82f6;color:#fff}.btn-cancel{background:#ef4444;color:#fff}.btn-reassign{background:#8b5cf6;color:#fff}.btn-delivered{background:#16a34a;color:#fff}
+.admin-page{padding:24px;background:linear-gradient(135deg,#ff7e30,#ff9f3f 40%,#ffb54c);min-height:100vh;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.admin-title{margin:0;font-size:22px;font-weight:800;color:#ffffff}
+.admin-filters{display:flex;gap:8px}
+.admin-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi-card{background:#0b1220;color:#fff;border-radius:12px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.kpi-title{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#ffdda8;margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:900}
+.admin-card{background:rgba(11,18,32,.95);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden}
+.admin-table{width:100%;border-collapse:separate;border-spacing:0}
+.admin-th,.admin-td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:14px;color:#e5e7eb}
+.admin-th{background:rgba(0,0,0,.25);font-weight:800;color:#fffbeb}
+.admin-row:nth-child(even){background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:#0b1220;background:#ffb54c}
+.b-pending{background:#ffb54c}
+.b-confirmed{background:#ff9f3f}
+.b-assigned{background:#fb923c}
+.b-delivered{background:#86efac}
+.b-cancelled{background:#fecaca}
+.admin-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{padding:8px 10px;border:none;border-radius:10px;font-weight:800;cursor:pointer;color:#0b1220;background:#ffb54c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-accept{background:#ff9f3f}
+.btn-cancel{background:#ef4444;color:#fff}
+.btn-reassign{background:#fb923c}
+.btn-delivered{background:#86efac}

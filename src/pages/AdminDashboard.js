@@ -47,6 +47,13 @@ export default function AdminDashboard() {
 
 	const filtered = useMemo(() => orders.filter(o => filter === 'all' ? true : o.status === filter), [orders, filter]);
 
+	const total = orders.length;
+	const totalPending = orders.filter(o => o.status === 'pending').length;
+	const totalConfirmed = orders.filter(o => o.status === 'confirmed').length;
+	const totalAssigned = orders.filter(o => o.status === 'out_for_delivery').length;
+	const totalDelivered = orders.filter(o => o.status === 'delivered').length;
+	const totalCancelled = orders.filter(o => o.status === 'cancelled').length;
+
 	const confirm = async (id) => { await ordersAPI.updateStatus(id, 'confirmed'); };
 	const cancel = async (id) => { await ordersAPI.updateStatus(id, 'cancelled'); };
 	const markDelivered = async (id) => { await ordersAPI.updateStatus(id, 'delivered'); };
@@ -75,6 +82,15 @@ export default function AdminDashboard() {
 						<option value="cancelled">Cancelled</option>
 					</select>
 				</div>
+			</div>
+
+			<div className="admin-kpis">
+				<div className="kpi-card"><div className="kpi-title">Total Orders</div><div className="kpi-value">{total}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Placed</div><div className="kpi-value">{totalPending}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Accepted</div><div className="kpi-value">{totalConfirmed}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Assigned</div><div className="kpi-value">{totalAssigned}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Delivered</div><div className="kpi-value">{totalDelivered}</div></div>
+				<div className="kpi-card"><div className="kpi-title">Cancelled</div><div className="kpi-value">{totalCancelled}</div></div>
 			</div>
 
 			<div className="admin-card">

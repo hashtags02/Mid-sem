@@ -10,7 +10,11 @@ const Order = require('../models/Order');
 const inMemoryOrders = new Map();
 let nextOrderNumericId = 1010;
 
-const generateOrderId = () => `ORD-${nextOrderNumericId++}`;
+const generateOrderId = () => {
+  const time = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `ORD-${time}-${rand}-${nextOrderNumericId++}`;
+};
 
 // SSE clients registry (optionally scoped by restaurantId)
 const sseClients = new Set(); // Set<{ res, restaurantId?: string }>

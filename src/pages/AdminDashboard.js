@@ -4,7 +4,7 @@ import './AdminDashboard.css';
 
 export default function AdminDashboard() {
 	const [orders, setOrders] = useState([]);
-	const [filter, setFilter] = useState('all');
+	const [filter, setFilter] = useState('picked_delivered');
 
 	// Load existing orders on mount so the table isn't empty if admin opens late
 	useEffect(() => {
@@ -46,7 +46,11 @@ export default function AdminDashboard() {
 		return () => ev.close();
 	}, []);
 
-	const filtered = useMemo(() => orders.filter(o => filter === 'all' ? true : o.status === filter), [orders, filter]);
+	const filtered = useMemo(() => orders.filter(o => (
+		filter === 'all' ? true :
+		filter === 'picked_delivered' ? ['out_for_delivery', 'delivered'].includes(o.status) :
+		o.status === filter
+	)), [orders, filter]);
 
 	const total = orders.length;
 	const totalPending = orders.filter(o => o.status === 'pending' || o.status === 'pending_delivery').length;
@@ -71,7 +75,7 @@ export default function AdminDashboard() {
 
 	const statusBadge = (s) => (
 		<span className={`badge ${s==='pending' || s==='pending_delivery' ? 'b-pending' : s==='accepted' || s==='confirmed' || s==='accepted_delivery' ? 'b-confirmed' : s==='ready_for_pickup' ? 'b-ready' : s==='out_for_delivery' ? 'b-assigned' : s==='delivered' ? 'b-delivered' : 'b-cancelled'}`}>{
-			s==='pending_delivery' ? 'Pending Delivery' : s==='accepted_delivery' ? 'Accepted by Delivery' : s==='pending' ? 'Placed' : (s==='accepted' || s==='confirmed') ? 'Accepted' : s==='ready_for_pickup' ? 'Ready for Pickup' : s==='out_for_delivery' ? 'Assigned' : s==='delivered' ? 'Delivered' : 'Cancelled'
+			s==='pending_delivery' ? 'Pending Delivery' : s==='accepted_delivery' ? 'Accepted by Delivery' : s==='pending' ? 'Placed' : (s==='accepted' || s==='confirmed') ? 'Accepted' : s==='ready_for_pickup' ? 'Ready for Pickup' : s==='out_for_delivery' ? 'Picked' : s==='delivered' ? 'Delivered' : 'Cancelled'
 		}</span>
 	);
 
@@ -82,6 +86,7 @@ export default function AdminDashboard() {
 				<div className="admin-filters">
 					<select value={filter} onChange={e => setFilter(e.target.value)}>
 						<option value="all">All</option>
+						<option value="picked_delivered">Picked/Delivered</option>
 						<option value="pending_delivery">Pending Delivery</option>
 						<option value="pending">Placed</option>
 						<option value="accepted">Accepted by Restaurant</option>

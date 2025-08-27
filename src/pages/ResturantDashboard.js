@@ -1,49 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ordersAPI } from '../services/api';
-
-// Simple pie chart using CSS conic-gradient (no external deps)
-const PieChart = ({ segments = [], size = 140, innerSize = 70 }) => {
-	const total = segments.reduce((sum, s) => sum + (s.value || 0), 0) || 1;
-	let current = 0;
-	const gradientStops = segments.map((s) => {
-		const start = (current / total) * 360;
-		const end = ((current + s.value) / total) * 360;
-		current += s.value;
-		return `${s.color} ${start}deg ${end}deg`;
-	}).join(', ');
-
-	const containerStyle = {
-		width: size,
-		height: size,
-		borderRadius: '50%',
-		background: `conic-gradient(${gradientStops})`,
-		position: 'relative',
-		display: 'inline-flex',
-		alignItems: 'center',
-		justifyContent: 'center'
-	};
-
-	const innerStyle = {
-		width: innerSize,
-		height: innerSize,
-		borderRadius: '50%',
-		background: '#fff'
-	};
-
-	return (
-		<div style={containerStyle}>
-			<div style={innerStyle} />
-		</div>
-	);
-};
-
-const cardStyle = {
-	background: '#fff',
-	borderRadius: 16,
-	padding: 16,
-	boxShadow: '0 8px 24px rgba(0,0,0,0.08)'
-};
 
 const badge = (text, color) => (
 	<span style={{
@@ -53,17 +9,13 @@ const badge = (text, color) => (
 		borderRadius: 999,
 		fontSize: 12,
 		fontWeight: 600
-	}}>{text}</span>
+	}}>
+		{text}
+	</span>
 );
 
 const ResturantDashboard = () => {
-	const [orders, setOrders] = useState([
-		{ id: 'ORD-1001', customerName: 'Aarav Shah', address: '12, Alkapuri, Vadodara', restaurantName: "Domino's Pizza", status: 'Pending', date: '2025-08-19' },
-		{ id: 'ORD-1002', customerName: 'Diya Patel', address: '33, Gotri Road, Vadodara', restaurantName: 'Le Privé', status: 'Picked Up', date: '2025-08-19' },
-		{ id: 'ORD-1003', customerName: 'Kabir Mehta', address: '7, OP Road, Vadodara', restaurantName: 'South Cafe', status: 'Delivered', date: '2025-08-18' },
-		{ id: 'ORD-1004', customerName: 'Isha Desai', address: 'Sun Pharma Road, Vadodara', restaurantName: 'Urban Bites', status: 'Pending', date: '2025-08-19' },
-		{ id: 'ORD-1005', customerName: 'Rohan Gupta', address: 'Ellora Park, Vadodara', restaurantName: 'Punjabi Dhaba', status: 'Delivered', date: '2025-08-01' }
-	]);
+	const [orders, setOrders] = useState([]);
 
 	const today = new Date().toISOString().slice(0, 10);
 	const totalToday = useMemo(() => orders.filter(o => o.date === today).length, [orders, today]);
@@ -74,69 +26,71 @@ const ResturantDashboard = () => {
 		delivered: orders.filter(o => o.status === 'Delivered').length
 	}), [orders]);
 
-	const updateStatus = (id, nextStatus) => {
+	const updateStatusLocal = (id, nextStatus) => {
 		setOrders(prev => prev.map(o => o.id === id ? { ...o, status: nextStatus } : o));
 	};
 
-	useEffect(() => {
-		// Try to scope by restaurantId from URL (?restaurantId=...)
-		const urlParams = new URLSearchParams(window.location.search);
-		const restaurantId = urlParams.get('restaurantId') || '';
-		const base = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api');
-		const ev = new EventSource(base + '/orders/events' + (restaurantId ? (`?restaurantId=${encodeURIComponent(restaurantId)}`) : ''));
-		ev.onmessage = () => {};
-		ev.addEventListener('order_created', (e) => {
-			try {
-				const order = JSON.parse(e.data);
-				setOrders(prev => [{ id: order.id, customerName: order.customerName, address: order.dropAddress, restaurantName: order.restaurantName, status: 'Pending', date: new Date().toISOString().slice(0,10), items: order.items }, ...prev]);
-			} catch (_){ }
-		});
-		ev.addEventListener('order_confirmed', (e) => {
-			try {
-				const order = JSON.parse(e.data);
-				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Picked Up' } : o));
-			} catch (_){ }
-		});
-		ev.addEventListener('order_rejected', (e) => {
-			try {
-				const order = JSON.parse(e.data);
-				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Rejected' } : o));
-			} catch (_){ }
-		});
-		ev.addEventListener('order_updated', (e) => {
-			try {
-				const order = JSON.parse(e.data);
-				const mapStatus = order.status === 'out_for_delivery' ? 'Picked Up' : (order.status === 'delivered' ? 'Delivered' : (order.status === 'cancelled' ? 'Rejected' : 'Pending'));
-				setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: mapStatus } : o));
-			} catch (_){ }
-		});
-		return () => ev.close();
-	}, []);
-
 	const acceptOrder = async (id) => {
 		try {
-			await ordersAPI.acceptByRestaurant(id);
-		} catch (_){ }
+			await ordersAPI.updateStatus(id, 'confirmed');
+		} catch (_) {}
 	};
 
-	const rejectOrder = async (id) => {
-		try {
-			await ordersAPI.rejectByRestaurant(id);
-		} catch (_){ }
-	};
+	useEffect(() => {
+		const base = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api');
+		const ev = new EventSource(base + '/orders/events');
+
+		const onCreated = (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				setOrders(prev => [{
+					id: order.id,
+					customerName: order.customerName,
+					address: order.dropAddress,
+					restaurantName: order.restaurantName,
+					status: 'Pending',
+					date: new Date().toISOString().slice(0, 10)
+				}, ...prev]);
+			} catch (_) {}
+		};
+
+		const onUpdated = (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				const mapped = order.status === 'out_for_delivery'
+					? 'Picked Up'
+					: (order.status === 'delivered' ? 'Delivered' : 'Pending');
+				updateStatusLocal(order.id, mapped);
+			} catch (_) {}
+		};
+
+		const onConfirmed = (e) => {
+			try {
+				const order = JSON.parse(e.data);
+				updateStatusLocal(order.id, 'Picked Up');
+			} catch (_) {}
+		};
+
+		ev.addEventListener('order_created', onCreated);
+		ev.addEventListener('order_updated', onUpdated);
+		ev.addEventListener('order_confirmed', onConfirmed);
+
+		return () => {
+			ev.removeEventListener('order_created', onCreated);
+			ev.removeEventListener('order_updated', onUpdated);
+			ev.removeEventListener('order_confirmed', onConfirmed);
+			ev.close();
+		};
+	}, []);
 
 	const pageStyle = {
 		minHeight: '100vh',
-		background: 'linear-gradient(135deg, #ff7e30, #ff9f3f 40%, #ffb54c)',
+		background: '#ff9f3f',
 		padding: 24,
 		fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
 	};
 
-	const grid = {
-		display: 'grid',
-		gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-		gap: 16
-	};
+	const cardStyle = { background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.08)' };
 
 	return (
 		<div style={pageStyle}>
@@ -146,7 +100,7 @@ const ResturantDashboard = () => {
 					<input placeholder="Search orders…" style={{ width: 320, borderRadius: 12, border: 'none', padding: '10px 14px' }} />
 				</header>
 
-				<div style={grid}>
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
 					<div style={cardStyle}>
 						<div style={{ color: '#6b7280', fontSize: 12, fontWeight: 600 }}>Total Today</div>
 						<div style={{ fontSize: 28, fontWeight: 800 }}>{totalToday}</div>
@@ -156,33 +110,21 @@ const ResturantDashboard = () => {
 						<div style={{ fontSize: 28, fontWeight: 800 }}>{totalLifetime}</div>
 					</div>
 					<div style={cardStyle}>
-						<div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-							<PieChart
-								size={120}
-								innerSize={60}
-								segments={[
-									{ value: stats.delivered, color: '#16a34a' },
-									{ value: stats.picked, color: '#3b82f6' },
-									{ value: stats.pending, color: '#f59e0b' }
-								]}
-							/>
-							<div>
-								<div style={{ fontWeight: 700, marginBottom: 8 }}>Order Status</div>
-								<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-									<span style={{ width: 10, height: 10, background: '#16a34a', borderRadius: 999 }} />
-									<span style={{ fontSize: 12, color: '#374151' }}>Delivered: {stats.delivered}</span>
-								</div>
-								<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-									<span style={{ width: 10, height: 10, background: '#3b82f6', borderRadius: 999 }} />
-									<span style={{ fontSize: 12, color: '#374151' }}>Picked Up: {stats.picked}</span>
-								</div>
-								<div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-									<span style={{ width: 10, height: 10, background: '#f59e0b', borderRadius: 999 }} />
-									<span style={{ fontSize: 12, color: '#374151' }}>Pending: {stats.pending}</span>
-								</div>
-							</div>
+						<div style={{ fontWeight: 700, marginBottom: 8 }}>Order Status</div>
+						<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+							<span style={{ width: 10, height: 10, background: '#16a34a', borderRadius: 999 }} />
+							<span style={{ fontSize: 12, color: '#374151' }}>Delivered: {stats.delivered}</span>
+						</div>
+						<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+							<span style={{ width: 10, height: 10, background: '#3b82f6', borderRadius: 999 }} />
+							<span style={{ fontSize: 12, color: '#374151' }}>Picked Up: {stats.picked}</span>
+						</div>
+						<div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+							<span style={{ width: 10, height: 10, background: '#f59e0b', borderRadius: 999 }} />
+							<span style={{ fontSize: 12, color: '#374151' }}>Pending: {stats.pending}</span>
 						</div>
 					</div>
+				</div>
 
 				<section style={{ marginTop: 24 }}>
 					<div style={{ ...cardStyle, overflow: 'hidden' }}>
@@ -213,29 +155,39 @@ const ResturantDashboard = () => {
 											<td style={{ padding: '12px 8px' }}>{o.address}</td>
 											<td style={{ padding: '12px 8px' }}>{o.restaurantName}</td>
 											<td style={{ padding: '12px 8px' }}>
-												{badge(o.status, o.status === 'Delivered' ? '#16a34a' : o.status === 'Picked Up' ? '#3b82f6' : (o.status === 'Rejected' ? '#ef4444' : '#f59e0b'))}
+												{badge(o.status, o.status === 'Delivered' ? '#16a34a' : o.status === 'Picked Up' ? '#3b82f6' : '#f59e0b')}
 											</td>
 											<td style={{ padding: '12px 8px' }}>
 												<div style={{ display: 'flex', gap: 8 }}>
 													<button
 														onClick={() => acceptOrder(o.id)}
 														style={{
-															padding: '8px 10px', borderRadius: 10, border: 'none', fontWeight: 700,
-															background: '#3b82f6', color: '#fff', cursor: 'pointer', opacity: o.status !== 'Pending' ? 0.5 : 1
+															padding: '8px 10px',
+															borderRadius: 10,
+															border: 'none',
+															fontWeight: 700,
+															background: '#3b82f6',
+															color: '#fff',
+															cursor: 'pointer',
+															opacity: o.status === 'Delivered' ? 0.5 : 1
 														}}
 														disabled={o.status !== 'Pending'}
 													>
 														Accept
 													</button>
 													<button
-														onClick={() => rejectOrder(o.id)}
+														onClick={() => updateStatusLocal(o.id, 'Delivered')}
 														style={{
-															padding: '8px 10px', borderRadius: 10, border: 'none', fontWeight: 700,
-															background: '#ef4444', color: '#fff', cursor: 'pointer', opacity: o.status !== 'Pending' ? 0.5 : 1
+															padding: '8px 10px',
+															borderRadius: 10,
+															border: 'none',
+															fontWeight: 700,
+															background: '#16a34a',
+															color: '#fff',
+															cursor: 'pointer'
 														}}
-														disabled={o.status !== 'Pending'}
 													>
-														Reject
+														Delivered
 													</button>
 												</div>
 											</td>
@@ -252,5 +204,3 @@ const ResturantDashboard = () => {
 };
 
 export default ResturantDashboard;
-
-

@@ -379,4 +379,43 @@ router.post('/:id/reject-restaurant', auth, async (req, res) => {
   }
 });
 
+// Admin: reassign delivery driver
+router.post('/:id/reassign-driver', auth, async (req, res) => {
+  try {
+    const { driverId, driverName } = req.body || {};
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const doc = await Order.findOne({ orderId: req.params.id }).lean();
+      if (!doc) return res.status(404).json({ error: 'Order not found' });
+      const updated = await Order.findOneAndUpdate(
+        { orderId: req.params.id },
+        { $set: { driver: { id: driverId || 'admin-reassign', name: driverName || 'Reassigned Driver' }, status: 'out_for_delivery' } },
+        { new: true }
+      ).lean();
+      const response = {
+        id: updated.orderId,
+        restaurantId: updated.restaurantId,
+        restaurantName: updated.restaurantName,
+        items: updated.items,
+        deliveryAddress: updated.deliveryAddress,
+        paymentMethod: updated.paymentMethod,
+        status: updated.status,
+        payoutAmount: updated.payoutAmount,
+        driver: updated.driver,
+      };
+      broadcastOrderEvent('order_reassigned', response);
+      return res.json(response);
+    }
+    const order = inMemoryOrders.get(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    order.driver = { id: driverId || 'admin-reassign', name: driverName || 'Reassigned Driver' };
+    order.status = 'out_for_delivery';
+    inMemoryOrders.set(order.id, order);
+    broadcastOrderEvent('order_reassigned', order);
+    return res.json(order);
+  } catch (error) {
+    console.error('Error reassigning driver:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

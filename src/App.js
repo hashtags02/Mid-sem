@@ -10,6 +10,7 @@ import Otp from "./pages/Otp";
 import Dashboard from "./pages/Dashboard";
 import TrackingPage from "./pages/TrackingPage";
 import ResturantDashboard from "./pages/ResturantDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // ✅ Components (moved under /components)
 import Navbar from "./components/Navbar";
@@ -92,6 +93,8 @@ function App() {
               <Route path="/split-upi-collection" element={<SplitUpiCollectionPage />} />
               {/* 🚚 Delivery Dashboard */}
               <Route path="/delivery" element={<DeliveryDashboard />} />
+              {/* 🛠️ Admin Dashboard */}
+              <Route path="/admin" element={<AdminDashboard />} />
 
               {/* 🍴 Restaurant Pages */}
               <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />

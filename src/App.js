@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import Otp from "./pages/Otp";
 import Dashboard from "./pages/Dashboard";
 import TrackingPage from "./pages/TrackingPage";
+import ResturantDashboard from "./pages/ResturantDashboard";
 
 // ✅ Components (moved under /components)
 import Navbar from "./components/Navbar";
@@ -110,6 +111,8 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/otp" element={<Otp />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              {/* 🚚 Delivery/Restaurant Admin Side */}
+              <Route path="/resturant-dashboard" element={<ResturantDashboard />} />
             </Routes>
           </div>
         </Router>

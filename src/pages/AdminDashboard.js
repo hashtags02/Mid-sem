@@ -6,6 +6,25 @@ export default function AdminDashboard() {
 	const [orders, setOrders] = useState([]);
 	const [filter, setFilter] = useState('all');
 
+	// Load existing orders on mount so the table isn't empty if admin opens late
+	useEffect(() => {
+		let alive = true;
+		(async () => {
+			try {
+				const list = await ordersAPI.getAll();
+				if (alive && Array.isArray(list)) {
+					setOrders(prev => {
+						// Merge unique by id, prefer newest from server
+						const map = new Map();
+						[...list, ...prev].forEach(o => map.set(o.id, o));
+						return Array.from(map.values());
+					});
+				}
+			} catch (_) {}
+		})();
+		return () => { alive = false; };
+	}, []);
+
 	useEffect(() => {
 		const base = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api');
 		const ev = new EventSource(base + '/orders/events');

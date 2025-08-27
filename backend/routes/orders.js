@@ -100,10 +100,12 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { items, deliveryAddress, paymentMethod, paymentStatus, deliveryInstructions, restaurantId, customerName, customerPhone } = req.body;
+    const { items, deliveryAddress, paymentMethod, paymentStatus, deliveryInstructions, restaurantId, customerName, customerPhone, discount } = req.body;
 
-    const calcPayout = Math.max(30, Math.round(items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0) * 0.1));
-    const calcTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
+    const rawTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
+    const appliedDiscount = Math.max(0, Math.min(Number(discount) || 0, rawTotal));
+    const calcTotal = rawTotal - appliedDiscount;
+    const calcPayout = Math.max(30, Math.round(rawTotal * 0.1));
 
     if (!(mongoose.connection && mongoose.connection.readyState === 1)) {
       return res.status(503).json({ error: 'Database not connected' });

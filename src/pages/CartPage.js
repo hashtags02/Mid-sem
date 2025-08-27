@@ -34,6 +34,8 @@ const CartPage = () => {
   }, []);
 
   const total = calculateTotal();
+  const discount = total >= 1000 ? 200 : total >= 500 ? 100 : total >= 200 ? 50 : 0;
+  const payable = Math.max(0, total - discount);
   const splitAmount = calculateSplitAmount();
   const manualSplitSummary = getManualSplitSummary();
 
@@ -90,6 +92,14 @@ const CartPage = () => {
 
           <div className="cart-summary">
             <h3>Cart Total: ₹ {total}</h3>
+            {discount > 0 && (
+              <div style={{ marginTop: 6, color: '#16a34a', fontWeight: 600 }}>
+                Discount applied: −₹{discount}
+              </div>
+            )}
+            <div style={{ marginTop: 6, fontWeight: 700 }}>
+              Payable: ₹ {payable}
+            </div>
 
             <div className="instructions-section" style={{ marginTop: 10 }}>
               <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Instructions for restaurant</label>
@@ -241,7 +251,7 @@ const CartPage = () => {
             </div>
 
             <button className="checkout-btn" onClick={handleCheckout}>
-              {splitBillEnabled ? `Proceed to Checkout (₹ ${splitAmount})` : "Proceed to Checkout"}
+              {splitBillEnabled ? `Proceed to Checkout (₹ ${splitAmount})` : `Proceed to Checkout (₹ ${payable})`}
             </button>
           </div>
         </>

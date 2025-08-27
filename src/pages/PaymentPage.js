@@ -26,6 +26,8 @@ const PaymentPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const totalAmount = calculateTotal();
+  const discount = totalAmount >= 1000 ? 200 : totalAmount >= 500 ? 100 : totalAmount >= 200 ? 50 : 0;
+  const payable = Math.max(0, totalAmount - discount);
   const splitAmount = calculateSplitAmount();
 
   useEffect(() => {
@@ -49,7 +51,8 @@ const PaymentPage = () => {
         restaurantId: cartItems[0]?.restaurantId || 'demo-restaurant',
         restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
         pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location',
-        deliveryInstructions: (localStorage.getItem('order_instructions') || '').trim()
+        deliveryInstructions: (localStorage.getItem('order_instructions') || '').trim(),
+        discount
       };
       await ordersAPI.create(orderPayload);
     } catch (e) {
@@ -71,7 +74,7 @@ const PaymentPage = () => {
         return;
       }
       await createBackendOrder('cod');
-      showSuccessMessage(`Order placed successfully! You will pay ₹${totalAmount} on delivery.`);
+      showSuccessMessage(`Order placed successfully! You will pay ₹${payable} on delivery.`);
       return;
     }
     
@@ -163,7 +166,7 @@ const PaymentPage = () => {
             </div>
             <div className="amount-display">
               <span>Amount to Pay:</span>
-              <span className="amount">₹{totalAmount}</span>
+              <span className="amount">₹{payable}</span>
             </div>
             
             {isProcessing ? (

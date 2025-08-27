@@ -32,30 +32,60 @@ const ResturantDashboard = () => {
 		setOrders(prev => prev.map(o => o.id === id ? { ...o, status: nextStatus } : o));
 	};
 
-	// accept order
+	// accept order (restaurant-side)
 	const acceptOrder = async (id) => {
 		try {
-			await ordersAPI.updateStatus(id, 'confirmed');
+			await ordersAPI.acceptByRestaurant(id);
+			updateStatusLocal(id, 'Accepted');
 		} catch (_) {}
 	};
 
 	// reject order
 	const rejectOrder = async (id) => {
 		try {
-			await ordersAPI.updateStatus(id, 'rejected'); // or "cancelled" if backend expects that
+			await ordersAPI.rejectByRestaurant(id);
 			updateStatusLocal(id, 'Cancelled');
 		} catch (_) {}
 	};
 
-	// handle order confirmed event from SSE
-	const onConfirmed = (e) => {
-		try {
-			const order = JSON.parse(e.data);
-			updateStatusLocal(order.id, 'Accepted');
-		} catch (_) {}
+	// map backend status to UI status label
+	const mapStatus = (status) => {
+		switch (status) {
+			case 'accepted':
+				return 'Accepted';
+			case 'ready_for_pickup':
+				return 'Ready for Pickup';
+			case 'out_for_delivery':
+				return 'Out for Delivery';
+			case 'delivered':
+				return 'Delivered';
+			case 'cancelled':
+			case 'rejected':
+				return 'Cancelled';
+			case 'pending_delivery':
+			case 'pending':
+			default:
+				return 'Pending';
+		}
 	};
 
 	useEffect(() => {
+		// initial load of existing orders
+		const loadInitial = async () => {
+			try {
+				const list = await ordersAPI.getAll();
+				setOrders((list || []).map(o => ({
+					id: o.id,
+					customerName: o.customerName,
+					address: o.dropAddress || (typeof o.deliveryAddress === 'string' ? o.deliveryAddress : ''),
+					restaurantName: o.restaurantName,
+					status: mapStatus(o.status),
+					date: (o.createdAt ? new Date(o.createdAt) : new Date()).toISOString().slice(0, 10)
+				})));
+			} catch (_) {}
+		};
+		loadInitial();
+
 		const base = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api');
 		const ev = new EventSource(base + '/orders/events');
 
@@ -76,9 +106,7 @@ const ResturantDashboard = () => {
 		const onUpdated = (e) => {
 			try {
 				const order = JSON.parse(e.data);
-				const mapped = order.status === 'out_for_delivery'
-					? 'Out for Delivery'
-					: (order.status === 'delivered' ? 'Delivered' : 'Pending');
+				const mapped = mapStatus(order.status);
 				updateStatusLocal(order.id, mapped);
 			} catch (_) {}
 		};
@@ -106,17 +134,15 @@ const ResturantDashboard = () => {
 
 		ev.addEventListener('order_created', onCreated);
 		ev.addEventListener('order_updated', onUpdated);
-		ev.addEventListener('order_confirmed', onConfirmed);
 		ev.addEventListener('order_accepted', onAccepted);
-		ev.addEventListener('order_ready', onReadyForPickup);
+		ev.addEventListener('order_ready_for_pickup', onReadyForPickup);
 		ev.addEventListener('order_assigned', onAssigned);
 
 		return () => {
 			ev.removeEventListener('order_created', onCreated);
 			ev.removeEventListener('order_updated', onUpdated);
-			ev.removeEventListener('order_confirmed', onConfirmed);
 			ev.removeEventListener('order_accepted', onAccepted);
-			ev.removeEventListener('order_ready', onReadyForPickup);
+			ev.removeEventListener('order_ready_for_pickup', onReadyForPickup);
 			ev.removeEventListener('order_assigned', onAssigned);
 			ev.close();
 		};

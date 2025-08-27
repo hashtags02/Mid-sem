@@ -32,6 +32,7 @@ import CartPage from "./pages/CartPage";
 import PaymentPage from "./pages/PaymentPage";
 import SplitPaymentPage from "./pages/SplitPaymentPage";
 import SplitUpiCollectionPage from "./pages/SplitUpiCollectionPage";
+import DeliveryDashboard from "./pages/DeliveryDashboard";
 
 import OldSchoolEateryPage from "./components/OldSchoolEateryPage";
 import DominosPizzaPage from "./components/DominosPizzaPage";
@@ -89,6 +90,8 @@ function App() {
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/split-payment" element={<SplitPaymentPage />} />
               <Route path="/split-upi-collection" element={<SplitUpiCollectionPage />} />
+              {/* 🚚 Delivery Dashboard */}
+              <Route path="/delivery" element={<DeliveryDashboard />} />
 
               {/* 🍴 Restaurant Pages */}
               <Route path="/old-school-eatery" element={<OldSchoolEateryPage />} />

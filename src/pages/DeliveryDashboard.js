@@ -10,7 +10,6 @@ export default function DeliveryDashboard() {
 	const { user, updateUser } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
-	const [pendingOrders, setPendingOrders] = useState([]);
 	const [activeOrder, setActiveOrder] = useState(null);
 	const [completedOrders, setCompletedOrders] = useState([]);
 	const [showProfile, setShowProfile] = useState(false);
@@ -41,11 +40,11 @@ export default function DeliveryDashboard() {
 
 	const acceptOrder = async (orderId) => {
 		if (!isOnline) return;
-		const order = pendingOrders.find(o => o.id === orderId);
+		const order = availableOrders.find(o => o.id === orderId);
 		if (!order) return;
 		try {
 			const updated = await ordersAPI.updateStatus(orderId, 'accepted_delivery');
-			setPendingOrders(prev => prev.filter(o => o.id !== orderId));
+			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
 		} catch (e) {
 			console.error('Failed to accept order', e);
 		}
@@ -54,7 +53,7 @@ export default function DeliveryDashboard() {
 	const rejectOrder = async (orderId) => {
 		try {
 			await ordersAPI.updateStatus(orderId, 'rejected');
-			setPendingOrders(prev => prev.filter(o => o.id !== orderId));
+			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
 		} catch (e) {
 			console.error('Failed to reject order', e);
 		}
@@ -126,9 +125,9 @@ export default function DeliveryDashboard() {
 						list = (all || []).filter(o => ['pending_delivery'].includes(o.status));
 					} catch (_) {}
 				}
-				if (mounted) setPendingOrders((list || []).filter(o => o.status === 'pending_delivery'));
+				if (mounted) setAvailableOrders((list || []).filter(o => o.status === 'pending_delivery'));
 			} catch (e) {
-				if (mounted) setPendingOrders([]);
+				if (mounted) setAvailableOrders([]);
 			}
 		};
 		load();
@@ -165,46 +164,7 @@ export default function DeliveryDashboard() {
 				</div>
 			</header>
 
-			<section className="dd-section">
-				<div className="dd-section-header">
-					<h2>Pending Orders</h2>
-					<span className="dd-chip">{pendingOrders.length}</span>
-				</div>
-				{pendingOrders.length === 0 ? (
-					<div className="dd-empty">No pending orders right now.</div>
-				) : (
-					<div className="dd-list">
-						{pendingOrders.map(order => (
-							<div key={order.id} className="dd-order-card">
-								<div className="dd-order-top">
-									<div className="dd-order-id">{order.id}</div>
-									<div className={`dd-status ${'dd-status-pending'}`}>{order.paymentType}</div>
-								</div>
-								<div className="dd-order-body">
-									<div className="dd-rowline"><span className="dd-key">Items:</span> <span className="dd-val">{(order.items || []).map(i => `${i.name} x${i.quantity || 1}`).join(', ')}</span></div>
-									<div className="dd-rowline"><span className="dd-key">Drop:</span> <span className="dd-val">{order.dropAddress || (typeof order.deliveryAddress === 'string' ? order.deliveryAddress : [order.deliveryAddress?.street, order.deliveryAddress?.city].filter(Boolean).join(', '))}</span></div>
-									<div className="dd-rowline"><span className="dd-key">Total:</span> <span className="dd-val">₹{order.totalAmount}</span></div>
-								</div>
-								<div className="dd-order-actions">
-									<button
-										className="dd-btn dd-btn-pick"
-										onClick={() => acceptOrder(order.id)}
-										disabled={!isOnline}
-									>
-										Accept
-									</button>
-									<button
-										className="dd-btn dd-btn-offline"
-										onClick={() => rejectOrder(order.id)}
-									>
-										Reject
-									</button>
-								</div>
-							</div>
-						))}
-					</div>
-				)}
-			</section>
+ 
 
 			<div className="dd-grid">
 				<section className="dd-section">

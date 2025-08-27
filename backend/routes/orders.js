@@ -247,7 +247,7 @@ router.put('/:id/status', [
 router.get('/available/list', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const docs = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing', 'accepted', 'ready_for_pickup'] } }).sort({ createdAt: -1 }).lean();
+      const docs = await Order.find({ status: { $in: ['pending', 'confirmed', 'preparing'] } }).sort({ createdAt: -1 }).lean();
       const mapped = docs.map(doc => ({
         id: doc.orderId,
         restaurantId: doc.restaurantId,
@@ -264,7 +264,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
       }));
       return res.json(mapped);
     }
-    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending', 'confirmed', 'preparing', 'accepted', 'ready_for_pickup'].includes(o.status));
+    const available = Array.from(inMemoryOrders.values()).filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status));
     return res.json(available);
   } catch (error) {
     console.error('Error fetching available orders:', error);
@@ -278,7 +278,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
       const doc = await Order.findOne({ orderId: req.params.id }).lean();
       if (!doc) return res.status(404).json({ error: 'Order not found' });
-      if (!['pending', 'confirmed', 'preparing', 'accepted', 'ready_for_pickup'].includes(doc.status)) {
+      if (!['pending', 'confirmed', 'preparing'].includes(doc.status)) {
         return res.status(400).json({ error: 'Order is not available for assignment' });
       }
       const updated = await Order.findOneAndUpdate(
@@ -303,7 +303,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
     }
     const order = inMemoryOrders.get(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (!['pending', 'confirmed', 'preparing', 'accepted', 'ready_for_pickup'].includes(order.status)) {
+    if (!['pending', 'confirmed', 'preparing'].includes(order.status)) {
       return res.status(400).json({ error: 'Order is not available for assignment' });
     }
     order.status = 'out_for_delivery';

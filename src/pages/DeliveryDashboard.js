@@ -117,8 +117,7 @@ export default function DeliveryDashboard() {
 						list = (all || []).filter(o => ['pending','confirmed','preparing'].includes(o.status));
 					} catch (_) {}
 				}
-				// Show all assignable orders; backend already limits to pending/confirmed/preparing
-				if (mounted) setAvailableOrders(list || []);
+				if (mounted) setAvailableOrders((list || []).filter(o => o.status === 'ready_for_pickup'));
 			} catch (e) {
 				if (mounted) setAvailableOrders([]);
 			}

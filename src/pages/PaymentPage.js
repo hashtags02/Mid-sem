@@ -48,7 +48,8 @@ const PaymentPage = () => {
         paymentStatus: paymentMethodLabel === 'cod' ? 'pending' : 'paid',
         restaurantId: cartItems[0]?.restaurantId || 'demo-restaurant',
         restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
-        pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location'
+        pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location',
+        deliveryInstructions: (localStorage.getItem('order_instructions') || '').trim()
       };
       await ordersAPI.create(orderPayload);
     } catch (e) {

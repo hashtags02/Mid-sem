@@ -79,6 +79,7 @@ const ResturantDashboard = () => {
 					customerName: o.customerName,
 					address: o.dropAddress || (typeof o.deliveryAddress === 'string' ? o.deliveryAddress : ''),
 					restaurantName: o.restaurantName,
+					instructions: o.deliveryInstructions || '',
 					status: mapStatus(o.status),
 					date: (o.createdAt ? new Date(o.createdAt) : new Date()).toISOString().slice(0, 10)
 				})));
@@ -97,6 +98,7 @@ const ResturantDashboard = () => {
 					customerName: order.customerName,
 					address: order.dropAddress,
 					restaurantName: order.restaurantName,
+					instructions: order.deliveryInstructions || '',
 					status: 'Pending',
 					date: new Date().toISOString().slice(0, 10)
 				}, ...prev]);
@@ -216,6 +218,7 @@ const ResturantDashboard = () => {
 										<th style={{ padding: '12px 8px' }}>Customer</th>
 										<th style={{ padding: '12px 8px' }}>Address</th>
 										<th style={{ padding: '12px 8px' }}>Resturant</th>
+										<th style={{ padding: '12px 8px' }}>Instructions</th>
 										<th style={{ padding: '12px 8px' }}>Status</th>
 										<th style={{ padding: '12px 8px' }}>Actions</th>
 									</tr>
@@ -227,6 +230,7 @@ const ResturantDashboard = () => {
 											<td style={{ padding: '12px 8px' }}>{o.customerName}</td>
 											<td style={{ padding: '12px 8px' }}>{o.address}</td>
 											<td style={{ padding: '12px 8px' }}>{o.restaurantName}</td>
+											<td style={{ padding: '12px 8px', maxWidth: 260, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }} title={o.instructions}>{o.instructions || '-'}</td>
 											<td style={{ padding: '12px 8px' }}>
 												{badge(o.status, 
 													o.status === 'Delivered' ? '#16a34a' : 

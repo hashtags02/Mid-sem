@@ -1,6 +1,6 @@
 // src/CartPage.js
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import "./CartContent.css";
@@ -26,6 +26,12 @@ const CartPage = () => {
     getManualSplitSummary
   } = useContext(CartContext);
   const [promoCode, setPromoCode] = useState("");
+  const [instructions, setInstructions] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem('order_instructions') || '';
+    setInstructions(saved);
+  }, []);
 
   const total = calculateTotal();
   const splitAmount = calculateSplitAmount();
@@ -49,6 +55,9 @@ const CartPage = () => {
         return;
       }
     }
+
+    // Persist instructions for payment page
+    localStorage.setItem('order_instructions', instructions || '');
 
     // Navigate to payment page
     navigate('/payment');
@@ -81,6 +90,17 @@ const CartPage = () => {
 
           <div className="cart-summary">
             <h3>Cart Total: ₹ {total}</h3>
+
+            <div className="instructions-section" style={{ marginTop: 10 }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Instructions for restaurant</label>
+              <textarea
+                placeholder="Add notes like no onions, extra spicy, ring the bell, etc."
+                value={instructions}
+                onChange={e => setInstructions(e.target.value)}
+                rows={3}
+                style={{ width: '100%', padding: 10, borderRadius: 8 }}
+              />
+            </div>
 
             {/* Split Bill Section */}
             <div className="split-bill-section">

@@ -43,7 +43,7 @@ export default function DeliveryDashboard() {
 		const order = availableOrders.find(o => o.id === orderId);
 		if (!order) return;
 		try {
-			const updated = await ordersAPI.updateStatus(orderId, 'accepted_delivery');
+			const updated = await ordersAPI.assign(orderId);
 			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
 			// Move to Active Order after accept
 			setActiveOrder({ ...order, status: 'Accepted' });

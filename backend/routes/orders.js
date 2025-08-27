@@ -243,7 +243,7 @@ router.get('/available/list', optionalAuth, async (req, res) => {
   }
 });
 
-// Assign an order to current delivery user and mark as out_for_delivery
+// Assign an order to current delivery user and mark as accepted by delivery
 router.post('/:id/assign', optionalAuth, async (req, res) => {
   try {
     if (mongoose.connection && mongoose.connection.readyState === 1) {
@@ -254,7 +254,7 @@ router.post('/:id/assign', optionalAuth, async (req, res) => {
       }
       const updated = await Order.findOneAndUpdate(
         { orderId: req.params.id },
-        { $set: { status: 'out_for_delivery', driver: { id: req.user?._id || req.user?.id, name: req.user?.name || 'Driver' } } },
+        { $set: { status: 'accepted_delivery', driver: { id: req.user?._id || req.user?.id, name: req.user?.name || 'Driver' } } },
         { new: true }
       ).lean();
       const response = {

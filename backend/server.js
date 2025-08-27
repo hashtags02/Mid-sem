@@ -62,17 +62,54 @@ if (process.env.MONGODB_URI) {
   console.log('⚠️  No MongoDB URI - running in basic mode');
 }
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK (supports multiple config methods)
 try {
-  const serviceAccount = require('./serviceAccountKey.json');
+  let serviceAccount = null;
+
+  // 1) Explicit path to JSON file
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
+    serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
+  }
+
+  // 2) Raw JSON string in env
+  if (!serviceAccount && process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  }
+
+  // 3) Base64-encoded JSON in env
+  if (!serviceAccount && process.env.FIREBASE_SA_BASE64) {
+    const decoded = Buffer.from(process.env.FIREBASE_SA_BASE64, 'base64').toString();
+    serviceAccount = JSON.parse(decoded);
+  }
+
+  // 4) Individual fields in env
+  if (!serviceAccount && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    serviceAccount = {
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      private_key: privateKey,
+    };
+  }
+
+  // 5) Default local file
+  if (!serviceAccount) {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
+    serviceAccount = require('./serviceAccountKey.json');
+  }
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
   console.log('🔥 Firebase Admin SDK initialized successfully');
 } catch (error) {
   console.error('❌ Firebase Admin SDK initialization failed:', error.message);
-  console.log('⚠️  Make sure serviceAccountKey.json exists and is valid');
-  process.exit(1); // Exit if Firebase can't be initialized
+  console.log('⚠️  Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SA_BASE64 or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY');
+  // Do not hard-exit in development; continue without Firebase if not configured
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
 }
 
 // Routes

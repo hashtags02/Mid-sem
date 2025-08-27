@@ -157,6 +157,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updated) => {
+    setUser(updated);
+    localStorage.setItem('user', JSON.stringify(updated));
+  };
+
   // Check if phone number is registered
   const checkPhoneNumber = async (phone) => {
     try {
@@ -263,6 +268,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     checkPhoneNumber,
     sendLoginOTP,
     sendRegistrationOTP,

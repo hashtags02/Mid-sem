@@ -4,6 +4,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { CartContext } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import "./PaymentPage.css";
+import { ordersAPI } from "../services/api";
 
 const PaymentPage = () => {
   const { 
@@ -38,7 +39,24 @@ const PaymentPage = () => {
     setSelectedPaymentMethod(method);
   };
 
-  const proceedToPayment = () => {
+  const createBackendOrder = async (paymentMethodLabel) => {
+    try {
+      const orderPayload = {
+        items: cartItems.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        deliveryAddress: 'Customer address',
+        paymentMethod: paymentMethodLabel === 'cod' ? 'cash' : 'upi',
+        restaurantId: cartItems[0]?.restaurantId || 'demo-restaurant',
+        restaurantName: cartItems[0]?.restaurantName || 'Demo Restaurant',
+        pickupAddress: cartItems[0]?.restaurantAddress || 'Pickup Location'
+      };
+      await ordersAPI.create(orderPayload);
+    } catch (e) {
+      // Non-blocking for now
+      console.error('Failed to create backend order', e);
+    }
+  };
+
+  const proceedToPayment = async () => {
     if (!selectedPaymentMethod) {
       alert('Please select a payment method');
       return;
@@ -50,6 +68,7 @@ const PaymentPage = () => {
         alert('Split bill is not available for Cash on Delivery. Please choose UPI payment for split bills.');
         return;
       }
+      await createBackendOrder('cod');
       showSuccessMessage(`Order placed successfully! You will pay ₹${totalAmount} on delivery.`);
       return;
     }
@@ -65,7 +84,7 @@ const PaymentPage = () => {
     }
   };
 
-  const processUPIPayment = () => {
+  const processUPIPayment = async () => {
     if (!upiId.trim()) {
       alert('Please enter your UPI ID');
       return;
@@ -73,8 +92,9 @@ const PaymentPage = () => {
     
     setIsProcessing(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsProcessing(false);
+      await createBackendOrder('upi');
       showSuccessMessage(`Payment successful! Order confirmed. Amount paid: ₹${totalAmount}`);
     }, 2000);
   };

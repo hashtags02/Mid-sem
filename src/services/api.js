@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = (typeof window !== 'undefined' && window.__API_BASE__) || process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 // Helper function to handle API requests
 const apiRequest = async (endpoint, options = {}) => {
@@ -188,6 +188,8 @@ export const ordersAPI = {
     method: 'PUT',
     body: JSON.stringify({ status }),
   }),
+  getAvailable: () => apiRequest('/orders/available/list'),
+  assign: (id) => apiRequest(`/orders/${id}/assign`, { method: 'POST' }),
 };
 
 export default {

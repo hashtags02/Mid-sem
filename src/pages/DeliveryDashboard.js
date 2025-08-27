@@ -2,34 +2,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import './DeliveryDashboard.css';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
+import { ordersAPI } from '../services/api';
 
-const initialAvailable = [
-	{
-		id: 'ORD-1005',
-		restaurantName: 'Spice Garden',
-		pickupAddress: '789 Spice Lane, Mumbai',
-		dropAddress: '12 Park View, Andheri West, Mumbai',
-		customerName: 'Karan Mehta',
-		customerPhone: '+91 98765 11111',
-		paymentType: 'COD',
-		payoutAmount: 45,
-		status: 'Available'
-	},
-	{
-		id: 'ORD-1006',
-		restaurantName: 'Burger House',
-		pickupAddress: '654 Burger Street, Mumbai',
-		dropAddress: '77 Lake Road, Powai, Mumbai',
-		customerName: 'Ritu Jain',
-		customerPhone: '+91 98765 22222',
-		paymentType: 'Paid Online',
-		payoutAmount: 52,
-		status: 'Available'
-	}
-];
+const initialAvailable = [];
 
 export default function DeliveryDashboard() {
-	const { user } = useAuth();
+	const { user, updateUser } = useAuth();
 	const [isOnline, setIsOnline] = useState(true);
 	const [availableOrders, setAvailableOrders] = useState(initialAvailable);
 	const [activeOrder, setActiveOrder] = useState(null);
@@ -60,12 +38,17 @@ export default function DeliveryDashboard() {
 
 	const weeklyEarnings = dailyEarnings; // For demo purposes, same as daily
 
-	const acceptOrder = (orderId) => {
+	const acceptOrder = async (orderId) => {
 		if (!isOnline || activeOrder) return;
 		const order = availableOrders.find(o => o.id === orderId);
 		if (!order) return;
-		setActiveOrder({ ...order, status: 'Assigned' });
-		setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+		try {
+			const assigned = await ordersAPI.assign(orderId);
+			setActiveOrder({ ...assigned, status: 'Assigned' });
+			setAvailableOrders(prev => prev.filter(o => o.id !== orderId));
+		} catch (e) {
+			console.error('Failed to accept order', e);
+		}
 	};
 
 	const updateActiveStatus = (newStatus) => {
@@ -89,6 +72,7 @@ export default function DeliveryDashboard() {
 			};
 			const updated = await usersAPI.updateProfile(payload);
 			localStorage.setItem('user', JSON.stringify(updated));
+			updateUser?.(updated);
 			setShowProfile(false);
 		} catch (err) {
 			setSaveError(err?.message || 'Failed to save profile');
@@ -112,11 +96,32 @@ export default function DeliveryDashboard() {
 		}
 	};
 
+	useEffect(() => {
+		let mounted = true;
+		const load = async () => {
+			try {
+				const list = await ordersAPI.getAvailable();
+				if (mounted) setAvailableOrders(list);
+			} catch (e) {
+				// ignore in demo mode
+			}
+		};
+		load();
+		const id = setInterval(load, 10000);
+		const ev = new EventSource((process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api') + '/orders/events');
+		const refresh = () => load();
+		ev.addEventListener('order_created', refresh);
+		ev.addEventListener('order_confirmed', refresh);
+		ev.addEventListener('order_updated', refresh);
+		ev.addEventListener('order_assigned', refresh);
+		return () => { mounted = false; clearInterval(id); ev.close(); };
+	}, []);
+
 	return (
 		<div className="dd-container">
 			<header className="dd-header">
 				<div className="dd-left">
-					<button className="dd-hamburger" aria-label="Open Profile" onClick={() => setShowProfile(true)}>
+					<button className={'dd-hamburger'} aria-label="Open Profile" onClick={() => setShowProfile(true)}>
 						<span></span>
 						<span></span>
 						<span></span>
@@ -142,11 +147,14 @@ export default function DeliveryDashboard() {
 							<h3>Update Profile</h3>
 							<button className="dd-close" onClick={() => setShowProfile(false)}>×</button>
 						</div>
+						<div className="dd-profile-preview">
+							<div className="dd-avatar dd-avatar-large" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
+								{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
+							</div>
+							<div className="dd-profile-name">{profile.name || 'Your Name'}</div>
+						</div>
 						<form onSubmit={handleProfileSave} className="dd-profile-form">
 							<div className="dd-avatar-row">
-								<div className="dd-avatar" style={{ backgroundImage: profile.avatarUrl ? `url(${profile.avatarUrl})` : 'none' }}>
-									{!profile.avatarUrl && <span className="dd-avatar-fallback">{profile.name?.[0] || 'D'}</span>}
-								</div>
 								<div className="dd-inputs">
 									<input type="file" accept="image/*" onChange={handleAvatarFile} />
 									<input type="url" placeholder="Profile Image URL" value={profile.avatarUrl} onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })} />

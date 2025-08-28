@@ -1,8 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../services/api';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
+	const { logout } = useAuth();
+	const navigate = useNavigate();
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+			navigate('/login');
+		} catch (_) {}
+	};
 	const [orders, setOrders] = useState([]);
 	const [filter, setFilter] = useState('picked_delivered');
 
@@ -84,6 +95,14 @@ export default function AdminDashboard() {
 			<div className="admin-header">
 				<h2 className="admin-title">Admin Dashboard</h2>
 				<div className="admin-filters">
+					<button onClick={handleLogout} aria-label="Logout" style={{
+						border: 'none', background: 'transparent', cursor: 'pointer', marginRight: 8,
+						display: 'inline-flex', flexDirection: 'column', gap: 3
+					}}>
+						<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+						<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+						<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+					</button>
 					<select value={filter} onChange={e => setFilter(e.target.value)}>
 						<option value="all">All</option>
 						<option value="picked_delivered">Picked/Delivered</option>

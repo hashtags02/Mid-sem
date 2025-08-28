@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../services/api';
 
 const badge = (text, color) => (
@@ -15,6 +17,15 @@ const badge = (text, color) => (
 );
 
 const ResturantDashboard = () => {
+	const { logout } = useAuth();
+	const navigate = useNavigate();
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+			navigate('/login');
+		} catch (_) {}
+	};
 	const [orders, setOrders] = useState([]);
 
 	const today = new Date().toISOString().slice(0, 10);
@@ -164,7 +175,17 @@ const ResturantDashboard = () => {
 			<div style={{ maxWidth: 1200, margin: '0 auto' }}>
 				<header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
 					<h2 style={{ color: '#fff', margin: 0 }}>CraveCart • Resturant Dashboard</h2>
-					<input placeholder="Search orders…" style={{ width: 320, borderRadius: 12, border: 'none', padding: '10px 14px' }} />
+					<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+						<button onClick={handleLogout} aria-label="Logout" style={{
+							border: 'none', background: 'transparent', cursor: 'pointer',
+							display: 'inline-flex', flexDirection: 'column', gap: 3, marginRight: 8
+						}}>
+							<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+							<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+							<span style={{ width: 24, height: 2, background: '#fff', display: 'block', borderRadius: 2 }} />
+						</button>
+						<input placeholder="Search orders…" style={{ width: 320, borderRadius: 12, border: 'none', padding: '10px 14px' }} />
+					</div>
 				</header>
 
 				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>

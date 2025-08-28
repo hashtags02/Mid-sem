@@ -245,6 +245,8 @@ const PhoneNumberInput = ({ onSuccess, onBack }) => {
 						>
 							<option value="user">I am a Customer</option>
 							<option value="delivery">I am a Delivery Partner</option>
+							<option value="restaurant_owner">I am a Restaurant Owner</option>
+							<option value="admin">I am an Admin</option>
 						</select>
 					</div>
 					

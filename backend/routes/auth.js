@@ -205,6 +205,16 @@ router.post('/verify-registration-otp', async (req, res) => {
     }
 
     // Create new user
+    // Map incoming role values to backend-accepted roles
+    let mappedRole = 'user';
+    if (userData.role === 'delivery' || userData.role === 'delivery_partner') {
+      mappedRole = 'delivery_partner';
+    } else if (userData.role === 'restaurant_owner') {
+      mappedRole = 'restaurant_owner';
+    } else if (userData.role === 'admin') {
+      mappedRole = 'admin';
+    }
+
     const user = new User({
       name: userData.name,
       email: userData.email,
@@ -224,7 +234,7 @@ router.post('/verify-registration-otp', async (req, res) => {
       }] : [],
       isPhoneVerified: true,
       isEmailVerified: false,
-      role: userData.role === 'delivery' || userData.role === 'delivery_partner' ? 'delivery_partner' : 'user',
+      role: mappedRole,
       firebaseUid: decodedToken.uid // Store Firebase UID for future reference
     });
 

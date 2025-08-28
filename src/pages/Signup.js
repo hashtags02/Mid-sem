@@ -12,7 +12,11 @@ const Signup = () => {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      if (user.role === 'delivery' || user.role === 'delivery_partner') {
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'restaurant_owner') {
+        navigate('/resturant-dashboard');
+      } else if (user.role === 'delivery' || user.role === 'delivery_partner') {
         navigate('/delivery');
       } else {
         navigate('/dashboard');
@@ -22,7 +26,15 @@ const Signup = () => {
 
   const handleAuthSuccess = (userData) => {
     alert('✅ Successfully registered!');
-    if (userData && (userData.role === 'delivery' || userData.role === 'delivery_partner')) {
+    if (!userData) {
+      navigate('/dashboard');
+      return;
+    }
+    if (userData.role === 'admin') {
+      navigate('/admin');
+    } else if (userData.role === 'restaurant_owner') {
+      navigate('/resturant-dashboard');
+    } else if (userData.role === 'delivery' || userData.role === 'delivery_partner') {
       navigate('/delivery');
     } else {
       navigate('/dashboard');

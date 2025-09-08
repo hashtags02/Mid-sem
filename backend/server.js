@@ -18,6 +18,7 @@ let io = null;
 const restaurantRoutes = require('./routes/restaurants');
 const dishRoutes = require('./routes/dishes');
 const userRoutes = require('./routes/users');
+const groupOrderRoutes = require('./routes/groupOrders');
 const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
 
@@ -155,6 +156,7 @@ app.use('/api/dishes', dishRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/group-orders', groupOrderRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));

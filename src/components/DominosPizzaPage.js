@@ -4,6 +4,7 @@ import GlobalSearch from './GlobalSearch';
 import RestaurantSearch from './RestaurantSearch';
 import './DominosPizzaPage.css';
 import { CartContext } from '../context/CartContext'; // Added import for CartContext
+import { useAddToCart } from '../hooks/useAddToCart';
 
 const restaurant = {
   name: 'Domino\'s Pizza',
@@ -29,7 +30,8 @@ const restaurant = {
 const categories = Array.from(new Set(restaurant.menu.map(item => item.category)));
 
 export default function DominosPizzaPage() {
-  const { addToCart, cartItems } = useContext(CartContext); // ✅ use global cart
+  const { cartItems } = useContext(CartContext);
+  const { addToCart } = useAddToCart();
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const navigate = useNavigate(); // ✅ Add navigation
 

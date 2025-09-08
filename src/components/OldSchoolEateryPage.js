@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GlobalSearch from './GlobalSearch';
 import './OldSchoolEateryPage.css';
 import { CartContext } from '../context/CartContext'; // ✅ import context
+import { useAddToCart } from '../hooks/useAddToCart';
 
 const restaurant = {
   name: 'Old School Eatery',
@@ -48,7 +49,8 @@ const restaurant = {
 const categories = Array.from(new Set(restaurant.menu.map(item => item.category)));
 
 export default function OldSchoolEateryPage() {
-  const { addToCart, cartItems } = useContext(CartContext); // ✅ use global cart
+  const { cartItems } = useContext(CartContext);
+  const { addToCart } = useAddToCart();
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const navigate = useNavigate(); // ✅ Add navigation
 

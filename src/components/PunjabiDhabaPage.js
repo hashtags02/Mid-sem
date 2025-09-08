@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GlobalSearch from './GlobalSearch';
 import './PunjabiDhabaPage.css';
 import { CartContext } from '../context/CartContext';
+import { useAddToCart } from '../hooks/useAddToCart';
 
 const restaurant = {
   name: 'Punjabi Dhaba',
@@ -31,7 +32,8 @@ const restaurant = {
 const categories = Array.from(new Set(restaurant.menu.map(item => item.category)));
 
 export default function PunjabiDhabaPage() {
-  const { addToCart, cartItems } = useContext(CartContext); // ✅ use global cart
+  const { cartItems } = useContext(CartContext);
+  const { addToCart } = useAddToCart();
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const navigate = useNavigate(); // ✅ Add navigation
 

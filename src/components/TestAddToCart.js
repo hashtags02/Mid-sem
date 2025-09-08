@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
-import { CartContext } from '../context/CartContext';
+import React from 'react';
+import { useAddToCart } from '../hooks/useAddToCart';
 
 const TestAddToCart = () => {
-  const { addToCart } = useContext(CartContext);
+  const { addToCart } = useAddToCart();
 
   const testItems = [
     {

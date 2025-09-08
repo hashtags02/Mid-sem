@@ -183,37 +183,7 @@ const CartPage = () => {
             ))}
           </div>
 
-          {isHost && (
-            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button
-                className="checkout-btn"
-                onClick={async () => {
-                  try {
-                    await setPaymentMode('host');
-                    await checkout();
-                    navigate('/payment');
-                  } catch (_) {
-                    alert('Failed to proceed to checkout.');
-                  }
-                }}
-              >
-                Proceed to Checkout
-              </button>
-              <button
-                className="checkout-btn"
-                onClick={async () => {
-                  try {
-                    if (!splitBillEnabled) toggleSplitBill();
-                    await setPaymentMode('split');
-                  } catch (_) {
-                    alert('Failed to enable split bill.');
-                  }
-                }}
-              >
-                Split Bill
-              </button>
-            </div>
-          )}
+          {/* Group-specific action buttons removed. Use global checkout/split controls below. */}
         </div>
       )}
       {cartItems.length === 0 ? (

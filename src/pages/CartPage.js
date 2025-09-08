@@ -28,12 +28,18 @@ const CartPage = () => {
   } = useContext(CartContext);
   const [promoCode, setPromoCode] = useState("");
   const [instructions, setInstructions] = useState("");
-  const { group, isHost, startGroup, joinGroup, setPaymentMode, checkout } = useGroupOrder();
+  const { group, isHost, startGroup, joinGroup, setPaymentMode, checkout, leaveGroup } = useGroupOrder();
+  const [orderType, setOrderType] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('order_instructions') || '';
     setInstructions(saved);
   }, []);
+
+  useEffect(() => {
+    // Keep order type in sync with group presence
+    setOrderType(group ? 'group' : 'solo');
+  }, [group]);
 
   const total = calculateTotal();
   const discount = total >= 1000 ? 200 : total >= 500 ? 100 : total >= 200 ? 50 : 0;
@@ -81,6 +87,42 @@ const CartPage = () => {
     <div className="cart-page">
       <h2>Your Cart</h2>
 
+      {/* Order type selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0 16px 0', flexWrap: 'wrap' }}>
+        <span style={{ fontWeight: 700 }}>Order type:</span>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input
+            type="radio"
+            name="orderType"
+            value="solo"
+            checked={orderType === 'solo'}
+            onChange={() => {
+              if (group) {
+                const confirmLeave = window.confirm('You are in a group order. Switch to Solo and leave the group?');
+                if (!confirmLeave) return;
+                leaveGroup();
+              }
+              setOrderType('solo');
+            }}
+          />
+          Solo
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input
+            type="radio"
+            name="orderType"
+            value="group"
+            checked={orderType === 'group'}
+            onChange={() => setOrderType('group')}
+          />
+          Group
+        </label>
+        {group && orderType === 'solo' && (
+          <button onClick={leaveGroup} className="checkout-btn" style={{ padding: '6px 10px' }}>Leave Group</button>
+        )}
+      </div>
+
+      {orderType === 'group' && (
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
         {!group && (
           <>
@@ -97,6 +139,7 @@ const CartPage = () => {
           </div>
         )}
       </div>
+      )}
 
       {group && (
         <div style={{ margin: '12px 0', padding: 12, border: '1px solid #eee', borderRadius: 8 }}>

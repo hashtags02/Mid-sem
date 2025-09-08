@@ -1,8 +1,9 @@
 // src/CartPage.js
 
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
+import { useGroupOrder } from "../context/GroupOrderContext";
 import "./CartContent.css";
 
 const CartPage = () => {
@@ -27,6 +28,7 @@ const CartPage = () => {
   } = useContext(CartContext);
   const [promoCode, setPromoCode] = useState("");
   const [instructions, setInstructions] = useState("");
+  const { group, isHost, startGroup, joinGroup, setPaymentMode, checkout } = useGroupOrder();
 
   useEffect(() => {
     const saved = localStorage.getItem('order_instructions') || '';
@@ -38,6 +40,16 @@ const CartPage = () => {
   const payable = Math.max(0, total - discount);
   const splitAmount = calculateSplitAmount();
   const manualSplitSummary = getManualSplitSummary();
+
+  const groupedByMember = useMemo(() => {
+    if (!group?.items) return {};
+    return group.items.reduce((acc, item) => {
+      const key = item.memberName || 'Member';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {});
+  }, [group]);
 
   const handlePromoApply = () => {
     alert(`Promo "${promoCode}" applied! (you can add discount logic)`);
@@ -68,6 +80,75 @@ const CartPage = () => {
   return (
     <div className="cart-page">
       <h2>Your Cart</h2>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+        {!group && (
+          <>
+            <button onClick={() => startGroup()} className="checkout-btn">Start Group Order</button>
+            <button onClick={async () => {
+              const code = prompt('Enter group code');
+              if (code) await joinGroup(code.trim());
+            }} className="checkout-btn">Join Group Order</button>
+          </>
+        )}
+        {group && (
+          <div style={{ padding: '8px 12px', background: '#f2f2f2', borderRadius: 8 }}>
+            <strong>Group Code:</strong> {group.code}
+          </div>
+        )}
+      </div>
+
+      {group && (
+        <div style={{ margin: '12px 0', padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 700 }}>Participants:</span>
+            {group.members?.map((m, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: '#fff', borderRadius: 999, border: '1px solid #eee' }}>
+                <img src={m.avatar || '/logo192.png'} alt={m.name} style={{ width: 22, height: 22, borderRadius: '50%' }} />
+                <span>{m.name}{m.isHost ? ' (Host)' : ''}</span>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <h3 style={{ margin: '10px 0' }}>Group Cart</h3>
+            {Object.keys(groupedByMember).length === 0 && <p>No items yet. Add from menus.</p>}
+            {Object.entries(groupedByMember).map(([memberName, items]) => (
+              <div key={memberName} style={{ marginBottom: 10 }}>
+                <h4 style={{ margin: '6px 0' }}>{memberName}'s items</h4>
+                {items.map((gi) => (
+                  <div key={gi._id} className="cart-item">
+                    <img src={gi.photo} alt={gi.name} />
+                    <div className="cart-item-info">
+                      <h4>{gi.name}</h4>
+                      <p>₹ {gi.price}</p>
+                      <div className="cart-item-quantity">
+                        <button onClick={() => {
+                          const newQty = Math.max(1, (gi.quantity || 1) - 1);
+                          // Only allow host or owner to edit handled by backend
+                          // Optimistic UI not required
+                          fetch('');
+                        }}>-</button>
+                        <span>{gi.quantity}</span>
+                        <button onClick={() => {}}>+</button>
+                      </div>
+                      <p>Subtotal: ₹ {gi.price * gi.quantity}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {isHost && (
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="checkout-btn" onClick={() => setPaymentMode('host')}>Host Pays All</button>
+              <button className="checkout-btn" onClick={() => setPaymentMode('split')}>Split Bill Mode</button>
+              <button className="checkout-btn" onClick={checkout}>Proceed to Checkout</button>
+            </div>
+          )}
+        </div>
+      )}
       {cartItems.length === 0 ? (
         <p>Your cart is empty.</p>
       ) : (

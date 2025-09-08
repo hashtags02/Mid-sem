@@ -199,10 +199,39 @@ export const ordersAPI = {
   }),
 };
 
+// Group Orders API
+export const groupOrdersAPI = {
+  create: (payload) => apiRequest('/group-orders', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  }),
+  getByCode: (code) => apiRequest(`/group-orders/${code}`),
+  join: (code) => apiRequest(`/group-orders/${code}/join`, { method: 'POST' }),
+  addItem: (code, item) => apiRequest(`/group-orders/${code}/items`, {
+    method: 'POST',
+    body: JSON.stringify(item),
+  }),
+  updateItem: (code, itemId, updates) => apiRequest(`/group-orders/${code}/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  }),
+  removeItem: (code, itemId) => apiRequest(`/group-orders/${code}/items/${itemId}`, {
+    method: 'DELETE',
+  }),
+  setPaymentMode: (code, mode) => apiRequest(`/group-orders/${code}/payment-mode`, {
+    method: 'POST',
+    body: JSON.stringify({ mode }),
+  }),
+  checkout: (code) => apiRequest(`/group-orders/${code}/checkout`, {
+    method: 'POST',
+  }),
+};
+
 export default {
   auth: authAPI,
   restaurants: restaurantsAPI,
   dishes: dishesAPI,
   users: usersAPI,
   orders: ordersAPI,
+  groupOrders: groupOrdersAPI,
 };

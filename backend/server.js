@@ -18,6 +18,7 @@ let io = null;
 const restaurantRoutes = require('./routes/restaurants');
 const dishRoutes = require('./routes/dishes');
 const userRoutes = require('./routes/users');
+const groupOrderRoutes = require('./routes/groupOrders');
 const orderRoutes = require('./routes/orders');
 const authRoutes = require('./routes/auth');
 
@@ -128,6 +129,10 @@ try {
   });
 
   io.on('connection', (socket) => {
+    // Join a room per group order code
+    socket.on('join_group', ({ code }) => {
+      if (code) socket.join(`group:${String(code)}`);
+    });
     // Join a room per order
     socket.on('join_order', ({ orderId }) => {
       if (orderId) socket.join(String(orderId));
@@ -155,6 +160,10 @@ app.use('/api/dishes', dishRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/group-orders', groupOrderRoutes);
+
+// Expose io instance for routes to emit events
+app.set('io', io);
 
 // Serve uploaded files
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));

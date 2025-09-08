@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext"; // ✅ Add CartProvider import
+import { GroupOrderProvider } from "./context/GroupOrderContext";
 
 // ✅ Auth Pages (stay under /pages)
 import Login from "./pages/Login";
@@ -33,6 +34,7 @@ import CartPage from "./pages/CartPage";
 import PaymentPage from "./pages/PaymentPage";
 import SplitPaymentPage from "./pages/SplitPaymentPage";
 import SplitUpiCollectionPage from "./pages/SplitUpiCollectionPage";
+import JoinGroupPage from "./pages/JoinGroupPage";
 import DeliveryDashboard from "./pages/DeliveryDashboard";
 
 import OldSchoolEateryPage from "./components/OldSchoolEateryPage";
@@ -70,7 +72,8 @@ function LandingPage() {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider> {/* ✅ Wrap with CartProvider */}
+      <CartProvider>
+        <GroupOrderProvider>
         <Router>
           <div className="App">
             <Routes>
@@ -86,6 +89,8 @@ function App() {
               <Route path="/categories" element={<FoodCategorySection />} />
               <Route path="/all-dishes" element={<AllDishesPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/group/join" element={<JoinGroupPage />} />
+              <Route path="/group/join/:code" element={<JoinGroupPage />} />
               
               {/* 💳 Payment Routes */}
               <Route path="/payment" element={<PaymentPage />} />
@@ -122,7 +127,8 @@ function App() {
             </Routes>
           </div>
         </Router>
-      </CartProvider> {/* ✅ Close CartProvider */}
+        </GroupOrderProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }

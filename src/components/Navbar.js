@@ -48,6 +48,7 @@ function Navbar() {
       <ul className="navbar-links">
         <li onClick={() => navigate("/")}>Home</li>
         <li onClick={() => navigate("/track")}>Track Order</li>
+        <li onClick={() => navigate("/group/join")}>Join Group Order</li>
         <li>About us</li>
         <li>Help/Support</li>
       </ul>

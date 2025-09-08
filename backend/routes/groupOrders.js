@@ -33,6 +33,8 @@ router.post('/', auth, async (req, res) => {
       members: [{ user: req.user._id, name: req.user.name, avatar: req.user.avatar, isHost: true }],
       items: [],
     });
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     console.error('Create group error', err);
@@ -62,6 +64,8 @@ router.post('/:code/join', auth, async (req, res) => {
       group.members.push({ user: req.user._id, name: req.user.name, avatar: req.user.avatar, isHost: false });
       await group.save();
     }
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     res.status(500).json({ error: 'Failed to join group' });
@@ -89,6 +93,8 @@ router.post('/:code/items', auth, async (req, res) => {
       notes,
     });
     await group.save();
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     console.error('Add item error', err);
@@ -115,6 +121,8 @@ router.put('/:code/items/:itemId', auth, async (req, res) => {
     if (quantity !== undefined) item.quantity = Math.max(1, Number(quantity) || 1);
     if (notes !== undefined) item.notes = notes;
     await group.save();
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update item' });
@@ -136,6 +144,8 @@ router.delete('/:code/items/:itemId', auth, async (req, res) => {
 
     item.deleteOne();
     await group.save();
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     res.status(500).json({ error: 'Failed to remove item' });
@@ -153,6 +163,8 @@ router.post('/:code/payment-mode', auth, async (req, res) => {
     if (!['host', 'split'].includes(mode)) return res.status(400).json({ error: 'Invalid payment mode' });
     group.paymentMode = mode;
     await group.save();
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     res.status(500).json({ error: 'Failed to set payment mode' });
@@ -169,6 +181,8 @@ router.post('/:code/checkout', auth, async (req, res) => {
     if (!group.items.length) return res.status(400).json({ error: 'Cart is empty' });
     group.status = 'locked';
     await group.save();
+    const io = req.app.get('io');
+    if (io) io.to(`group:${group.code}`).emit('group:update', group);
     res.json(group);
   } catch (err) {
     res.status(500).json({ error: 'Failed to checkout' });

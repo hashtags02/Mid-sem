@@ -30,6 +30,7 @@ const CartPage = () => {
   const [instructions, setInstructions] = useState("");
   const { group, isHost, startGroup, joinGroup, setPaymentMode, checkout, leaveGroup } = useGroupOrder();
   const [orderType, setOrderType] = useState(null);
+  const isGroupNonHost = !!group && !isHost;
 
   useEffect(() => {
     const saved = localStorage.getItem('order_instructions') || '';
@@ -62,6 +63,10 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
+    if (isGroupNonHost) {
+      alert('Only the host can proceed to checkout for a group order.');
+      return;
+    }
     if (cartItems.length === 0) {
       alert('Your cart is empty!');
       return;
@@ -237,8 +242,9 @@ const CartPage = () => {
                   <input
                     type="checkbox"
                     checked={splitBillEnabled}
-                    onChange={toggleSplitBill}
+                    onChange={!isGroupNonHost ? toggleSplitBill : undefined}
                     className="split-bill-checkbox"
+                    disabled={isGroupNonHost}
                   />
                   <span className="split-bill-text">Split Bill</span>
                 </label>
@@ -252,6 +258,11 @@ const CartPage = () => {
                     }}>
                       💳 Note: Split bills require UPI payment
                     </p>
+                    {isGroupNonHost && (
+                      <p style={{ color: '#a00', fontSize: '0.8rem', margin: '4px 0 0 0' }}>
+                        Only the host can change split bill settings in a group order.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -265,7 +276,8 @@ const CartPage = () => {
                         name="splitType"
                         value="equal"
                         checked={splitBillType === 'equal'}
-                        onChange={(e) => updateSplitBillType(e.target.value)}
+                        onChange={!isGroupNonHost ? (e) => updateSplitBillType(e.target.value) : undefined}
+                        disabled={isGroupNonHost}
                       />
                       Split Equally
                     </label>
@@ -275,7 +287,8 @@ const CartPage = () => {
                         name="splitType"
                         value="manual"
                         checked={splitBillType === 'manual'}
-                        onChange={(e) => updateSplitBillType(e.target.value)}
+                        onChange={!isGroupNonHost ? (e) => updateSplitBillType(e.target.value) : undefined}
+                        disabled={isGroupNonHost}
                       />
                       Split Manually (Add Names & Amounts)
                     </label>
@@ -289,8 +302,9 @@ const CartPage = () => {
                         min="1"
                         max="10"
                         value={splitBillCount}
-                        onChange={(e) => updateSplitBillCount(parseInt(e.target.value))}
+                        onChange={!isGroupNonHost ? (e) => updateSplitBillCount(parseInt(e.target.value)) : undefined}
                         className="split-bill-input"
+                        disabled={isGroupNonHost}
                       />
                       <div className="split-bill-result">
                         <p>Each person pays: ₹ {splitAmount}</p>
@@ -303,8 +317,9 @@ const CartPage = () => {
                       <div className="manual-split-header">
                         <h4>Manual Split</h4>
                         <button 
-                          onClick={addManualSplitPerson}
+                          onClick={!isGroupNonHost ? addManualSplitPerson : undefined}
                           className="add-person-btn"
+                          disabled={isGroupNonHost}
                         >
                           + Add Person
                         </button>
@@ -318,21 +333,24 @@ const CartPage = () => {
                                 type="text"
                                 placeholder="Enter name"
                                 value={person.name}
-                                onChange={(e) => updateManualSplitPerson(index, 'name', e.target.value)}
+                                onChange={!isGroupNonHost ? (e) => updateManualSplitPerson(index, 'name', e.target.value) : undefined}
                                 className="person-name-input"
+                                disabled={isGroupNonHost}
                               />
                               <input
                                 type="number"
                                 placeholder="Amount"
                                 value={person.amount || ''}
-                                onChange={(e) => updateManualSplitPerson(index, 'amount', parseFloat(e.target.value) || 0)}
+                                onChange={!isGroupNonHost ? (e) => updateManualSplitPerson(index, 'amount', parseFloat(e.target.value) || 0) : undefined}
                                 className="person-amount-input"
+                                disabled={isGroupNonHost}
                               />
                             </div>
                             {manualSplitData.length > 1 && (
                               <button 
-                                onClick={() => removeManualSplitPerson(index)}
+                                onClick={!isGroupNonHost ? () => removeManualSplitPerson(index) : undefined}
                                 className="remove-person-btn"
+                                disabled={isGroupNonHost}
                               >
                                 ×
                               </button>

@@ -40,17 +40,17 @@ function HeroSection() {
   return (
     <section className="hero">
       <nav className="navbar">
-        <div className="navbar-logo">CraveCart</div>
+        <div className="navbar-logo" onClick={() => navigate('/')}>CraveCart</div>
         <ul className="navbar-links">
-          <li>Home</li>
-          <li>About us</li>
-          <li>Help/Support</li>
+          <li onClick={() => navigate('/')}>Home</li>
+          <li onClick={() => navigate('/about')}>About us</li>
+          <li onClick={() => navigate('/help')}>Help/Support</li>
         </ul>
 
         <div className="navbar-icons">
           {user ? (
             <>
-              <span className="cart-icon">
+              <span className="cart-icon" onClick={() => navigate('/cart')}>
                 🛒
                 {totalItems > 0 && <span className="cart-count-badge">{totalItems}</span>}
               </span>
@@ -115,7 +115,7 @@ function HeroSection() {
           Craving something delicious?<br />
           Order from local restaurants near you
         </p>
-        <button className="order-btn">Order Now</button>
+        <button className="order-btn" onClick={() => navigate('/categories')}>Order Now</button>
       </div>
     </section>
   );

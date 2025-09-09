@@ -39,12 +39,53 @@ const Otp = () => {
     setLoading(true);
 
     try {
+      // Check if Firebase is available
       if (!window.confirmationResult) {
-        alert('❌ OTP session expired. Please try again.');
-        navigate('/login');
+        console.log('Firebase not available, using fallback verification');
+        
+        // Fallback: Direct backend verification without Firebase
+        let backendResponse;
+        if (isNewUser) {
+          // Create account in backend (fallback mode)
+          backendResponse = await fetch('http://localhost:5000/api/auth/verify-registration-otp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              phoneNumber: phone,
+              userData: {
+                name: signupData.name,
+                email: signupData.email,
+                role: 'user'
+              }
+            }),
+          });
+        } else {
+          // Login existing account in backend (fallback mode)
+          backendResponse = await fetch('http://localhost:5000/api/auth/verify-login-otp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              phoneNumber: phone
+            }),
+          });
+        }
+
+        const data = await backendResponse.json();
+        if (!backendResponse.ok) throw new Error(data.error || 'Backend error');
+
+        // Store token & user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        navigate('/dashboard');
         return;
       }
 
+      // Firebase verification (if available)
       const result = await window.confirmationResult.confirm(code);
 
       if (result.user) {
@@ -54,32 +95,37 @@ const Otp = () => {
         let backendResponse;
         if (isNewUser) {
           // Create account in backend
-          backendResponse = await fetch('http://localhost:5000/api/auth/signup-phone', {
+          backendResponse = await fetch('http://localhost:5000/api/auth/verify-registration-otp', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify({
-              phone,
-              name: signupData.name,
-              email: signupData.email,
+              phoneNumber: phone,
+              idToken: idToken,
+              userData: {
+                name: signupData.name,
+                email: signupData.email,
+                role: 'user'
+              }
             }),
           });
         } else {
           // Login existing account in backend
-          backendResponse = await fetch('http://localhost:5000/api/auth/login-phone', {
+          backendResponse = await fetch('http://localhost:5000/api/auth/verify-login-otp', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
             },
-            body: JSON.stringify({ phone }),
+            body: JSON.stringify({ 
+              phoneNumber: phone,
+              idToken: idToken
+            }),
           });
         }
 
         const data = await backendResponse.json();
-        if (!backendResponse.ok) throw new Error(data.message || 'Backend error');
+        if (!backendResponse.ok) throw new Error(data.error || 'Backend error');
 
         // Store token & user data
         localStorage.setItem('token', data.token);

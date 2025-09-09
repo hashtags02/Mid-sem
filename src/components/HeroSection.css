@@ -29,47 +29,6 @@
   color: rgb(255, 255, 255)
 }
 
-.hero-content {
-  color: #fff;
-  max-width: 40%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-top: 32px;
-}
-
-.hero-content h1 {
-  font-size: 2.5rem;
-  margin-bottom: 2px;
-  padding-left: 20px;
-  font-weight: bold;
-}
-
-.hero-desc {
-  font-size: 1.1rem;
-  padding-left: 20px;
-  margin-bottom: 30px;
-}
-
-.order-btn {
-  background: #fff;
-  color: #ff8008;
-  border: none;
-  border-radius: 8px;
-  padding: 20px 28px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s;
-  padding-left: 20px; 
-  margin-left: 20px; 
-}
-
-.order-btn:hover {
-  background: #ffe0b2;
-}
-
 /* Navbar Styles */
 .navbar {
   display: flex;
@@ -147,15 +106,86 @@
 }
 
 /* Hamburger Menu Styles */
+.navbar-user-section {
+  position: relative;
+}
+
 .hamburger-menu {
   cursor: pointer;
   padding: 8px;
   border-radius: 4px;
   transition: background-color 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .hamburger-menu:hover {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background-color: #333;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-line.open:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-line.open:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-line.open:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 200px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+.user-info {
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.user-info span {
+  color: #333;
+  font-weight: 500;
+}
+
+.menu-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-items li {
+  padding: 0.75rem 0;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+  border-radius: 4px;
+  padding-left: 0.5rem;
+}
+
+.menu-items li:hover {
+  color: #ff8008;
+  background: rgba(255, 128, 8, 0.1);
 }
 
 .hamburger {
@@ -346,22 +376,45 @@
   to { transform: translateX(0); }
 }
 
-@media (max-width: 900px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-    padding: 24px 10px 0 10px;
-    min-height: 420px;
-    height: auto;
-    background: 
-      linear-gradient(90deg, #FF8400 0%, #FF8400 35%, rgba(255,132,0,0.0) 65%, rgba(255,132,0,0.0) 100%),
-      url('./burger.jpg') 100% 55%/160% no-repeat;
-    overflow: hidden;
-  }
-  .hero-content {
-    max-width: 100%;
-    margin-top: 24px;
-  }
+.hero-content {
+  color: #fff;
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2px;
+  padding-left: 20px;
+  font-weight: bold;
+}
+
+.hero-desc {
+  font-size: 1.1rem;
+  padding-left: 20px;
+  margin-bottom: 30px;
+}
+
+.order-btn {
+  background: #fff;
+  color: #ff8008;
+  border: none;
+  border-radius: 8px;
+  padding: 20px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: background 0.2s;
+  padding-left: 20px; 
+  margin-left: 20px; 
+}
+
+.order-btn:hover {
+  background: #ffe0b2;
 }
 
 /* Responsive Design */
@@ -385,14 +438,6 @@
     height: auto;
   }
   
-  .navbar {
-    padding: 15px 20px;
-  }
-  
-  .navbar-links {
-    gap: 20px;
-  }
-  
   .hero-content {
     max-width: 100%;
     margin-top: 40px;
@@ -413,51 +458,11 @@
     height: 300px;
     margin-top: 30px;
   }
-  
-  .food-items {
-    position: relative;
-    height: 100%;
-  }
-  
-  .burger {
-    position: relative;
-    right: auto;
-    top: auto;
-    transform: none;
-  }
-  
-  .burger img {
-    width: 200px;
-    height: 150px;
-  }
-  
-  .fries {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  
-  .fries img {
-    width: 80px;
-    height: 60px;
-  }
-  
-  .salad {
-    position: absolute;
-    right: 50%;
-    top: 10px;
-  }
-  
-  .salad img {
-    width: 100px;
-    height: 80px;
-  }
 }
 
 @media (max-width: 600px) {
-  .navbar-links {
-    display: none;
+  .hero {
+    padding: 15px;
   }
   
   .hero-content h1 {
@@ -469,7 +474,7 @@
   }
   
   .order-btn {
-    padding: 15px 30px;
-    font-size: 1.1rem;
+    padding: 15px 20px;
+    font-size: 1rem;
   }
 }

@@ -49,8 +49,8 @@ function Navbar() {
         <li onClick={() => navigate("/")}>Home</li>
         <li onClick={() => navigate("/track")}>Track Order</li>
         <li onClick={() => navigate("/group/join")}>Join Group Order</li>
-        <li>About us</li>
-        <li>Help/Support</li>
+        <li onClick={() => navigate("/about")}>About us</li>
+        <li onClick={() => navigate("/help")}>Help/Support</li>
       </ul>
 
       {!user ? (
@@ -76,6 +76,8 @@ function Navbar() {
                 <li onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}>Dashboard</li>
                 <li onClick={() => { navigate("/cart"); setIsMenuOpen(false); }}>Cart</li>
                 <li onClick={() => { navigate("/"); setIsMenuOpen(false); }}>Home</li>
+                <li onClick={() => { navigate("/about"); setIsMenuOpen(false); }}>About Us</li>
+                <li onClick={() => { navigate("/help"); setIsMenuOpen(false); }}>Help/Support</li>
                 <li onClick={handleLogout}>Logout</li>
               </ul>
             </div>

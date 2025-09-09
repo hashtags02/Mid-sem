@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import TrackingPage from "./pages/TrackingPage";
 import ResturantDashboard from "./pages/ResturantDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AboutUs from "./pages/AboutUs";
+import HelpSupport from "./pages/HelpSupport";
 
 // ✅ Components (moved under /components)
 import Navbar from "./components/Navbar";
@@ -26,7 +28,6 @@ import AboutUsSection from "./components/AboutUsSection";
 import FoodGalleryRow from "./components/FoodGalleryRow";
 import KeyHighlightsSection from "./components/KeyHighlightsSection";
 import FooterSection from "./components/FooterSection";
-import TestAddToCart from "./components/TestAddToCart";
 
 import FoodCategorySection from "./components/FoodCategorySection";
 import AllDishesPage from "./components/AllDishesPage";
@@ -74,7 +75,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <GroupOrderProvider>
-        <Router>
+        <Router basename={process.env.PUBLIC_URL || '/'}>
           <div className="App">
             <Routes>
               {/* 🏠 Main Landing */}
@@ -122,6 +123,11 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/otp" element={<Otp />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* 📄 Info Pages */}
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/help" element={<HelpSupport />} />
+              
               {/* 🚚 Delivery/Restaurant Admin Side */}
               <Route path="/resturant-dashboard" element={<ResturantDashboard />} />
             </Routes>
